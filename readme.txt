@@ -3,7 +3,7 @@ Contributors: flexatech
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: blog, one-column, block-patterns, full-site-editing, block-styles, editor-style, style-variations, custom-colors, featured-images, translation-ready
@@ -53,6 +53,11 @@ Yes. Flexa is designed to work with WordPress core features and most well-coded 
 
 == Changelog ==
 
+= 1.1.1 =
+* Replaced the theme screenshot with a placeholder-text version containing no promotional text and no third-party or AI-generated images.
+* Documented image and font licensing in the Resources section.
+* Unified the theme license to GPLv2 or later across style.css and readme.txt.
+
 = 1.1.0 =
 * Added Dark style variation.
 * Removed accessibility-ready tag.
@@ -79,6 +84,14 @@ GNU General Public License for more details.
 
 == Resources ==
 
-No external resources are bundled with this theme.
+Flexa bundles no third-party resources.
 
-Flexa uses the native system font stack and does not make external font requests.
+=== Fonts ===
+Flexa uses the native system font stack and does not bundle or make requests
+to any external fonts (no Google Fonts).
+
+=== Images ===
+No images are bundled with this theme. The theme screenshot (screenshot.png)
+is an original work created by the theme author, contains only placeholder
+text, and includes no third-party or AI-generated images.
+License: GPLv2 or later. https://www.gnu.org/licenses/gpl-2.0.html
