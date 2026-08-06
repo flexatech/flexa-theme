@@ -1,0 +1,329 @@
+# Copyright (C) 2026 flexatech
+# This file is distributed under the GNU General Public License v3 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Flexa 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/theme/flexa\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-06-27T04:04:46+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: flexa\n"
+
+#. Theme Name of the theme
+#: style.css
+#: inc/patterns.php:18
+msgid "Flexa"
+msgstr ""
+
+#. Description of the theme
+#: style.css
+msgid "A minimal block starter theme. Flexa gives you a clean foundation - white, black, and one accent color - so you can build without clearing away what someone else put there first."
+msgstr ""
+
+#. Author of the theme
+#: style.css
+msgid "flexatech"
+msgstr ""
+
+#. Author URI of the theme
+#: style.css
+msgid "https://profiles.wordpress.org/flexatech/"
+msgstr ""
+
+#: inc/block-styles.php:42
+msgid "Outline"
+msgstr ""
+
+#: inc/block-styles.php:50
+msgid "Wavy"
+msgstr ""
+
+#: patterns/404-content.php
+msgctxt "Pattern title"
+msgid "404 Content"
+msgstr ""
+
+#: patterns/404-content.php:13
+msgid "404 - Page Not Found"
+msgstr ""
+
+#: patterns/404-content.php:17
+msgid "The page you're looking for couldn't be found. Try searching, or head back to the homepage."
+msgstr ""
+
+#: patterns/page-comments.php
+msgctxt "Pattern title"
+msgid "Page Comments"
+msgstr ""
+
+#: patterns/query-loop-card.php
+msgctxt "Pattern title"
+msgid "Query Loop Card"
+msgstr ""
+
+#: patterns/query-loop.php
+msgctxt "Pattern title"
+msgid "Query Loop"
+msgstr ""
+
+#: patterns/query-no-results.php
+msgctxt "Pattern title"
+msgid "Query No Results"
+msgstr ""
+
+#: patterns/query-no-results.php:9
+msgid "No posts found."
+msgstr ""
+
+#: patterns/query-pagination.php
+msgctxt "Pattern title"
+msgid "Query Pagination"
+msgstr ""
+
+#: patterns/search-content.php
+msgctxt "Pattern title"
+msgid "Search Content"
+msgstr ""
+
+#: patterns/search-content.php:24
+msgid "No results found. Try a different search term."
+msgstr ""
+
+#: patterns/single-author-bio.php
+msgctxt "Pattern title"
+msgid "Single Author Bio"
+msgstr ""
+
+#: patterns/single-comments.php
+msgctxt "Pattern title"
+msgid "Single Comments"
+msgstr ""
+
+#: patterns/single-post-content.php
+msgctxt "Pattern title"
+msgid "Single Post Content"
+msgstr ""
+
+#: patterns/single-post-header.php
+msgctxt "Pattern title"
+msgid "Single Post Header"
+msgstr ""
+
+#: patterns/single-post-navigation.php
+msgctxt "Pattern title"
+msgid "Single Post Navigation"
+msgstr ""
+
+#: theme.json
+#: styles/dusty-rose.json
+#: styles/nordic.json
+#: styles/primary.json
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Base"
+msgstr ""
+
+#: theme.json
+#: styles/dusty-rose.json
+#: styles/nordic.json
+#: styles/primary.json
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Contrast"
+msgstr ""
+
+#: theme.json
+#: styles/dusty-rose.json
+#: styles/nordic.json
+#: styles/primary.json
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Accent"
+msgstr ""
+
+#: theme.json
+#: styles/dusty-rose.json
+#: styles/nordic.json
+#: styles/primary.json
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Accent Light"
+msgstr ""
+
+#: theme.json
+#: styles/dusty-rose.json
+#: styles/nordic.json
+#: styles/primary.json
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Subtle"
+msgstr ""
+
+#: theme.json
+#: styles/dusty-rose.json
+#: styles/nordic.json
+#: styles/primary.json
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Muted"
+msgstr ""
+
+#: theme.json
+msgctxt "Font family name"
+msgid "System Sans"
+msgstr ""
+
+#: theme.json
+msgctxt "Font family name"
+msgid "System Serif"
+msgstr ""
+
+#: theme.json
+msgctxt "Font family name"
+msgid "System Mono"
+msgstr ""
+
+#: theme.json
+msgctxt "Font size name"
+msgid "Small"
+msgstr ""
+
+#: theme.json
+msgctxt "Font size name"
+msgid "Medium"
+msgstr ""
+
+#: theme.json
+msgctxt "Font size name"
+msgid "Large"
+msgstr ""
+
+#: theme.json
+msgctxt "Font size name"
+msgid "X-Large"
+msgstr ""
+
+#: theme.json
+msgctxt "Font size name"
+msgid "XX-Large"
+msgstr ""
+
+#: theme.json
+msgctxt "Space size name"
+msgid "XS"
+msgstr ""
+
+#: theme.json
+msgctxt "Space size name"
+msgid "S"
+msgstr ""
+
+#: theme.json
+msgctxt "Space size name"
+msgid "M"
+msgstr ""
+
+#: theme.json
+msgctxt "Space size name"
+msgid "L"
+msgstr ""
+
+#: theme.json
+msgctxt "Space size name"
+msgid "XL"
+msgstr ""
+
+#: theme.json
+msgctxt "Space size name"
+msgid "XXL"
+msgstr ""
+
+#: theme.json
+msgctxt "Template part name"
+msgid "Header"
+msgstr ""
+
+#: theme.json
+msgctxt "Template part name"
+msgid "Header Custom"
+msgstr ""
+
+#: theme.json
+msgctxt "Template part name"
+msgid "Footer"
+msgstr ""
+
+#: theme.json
+msgctxt "Custom template name"
+msgid "Blank"
+msgstr ""
+
+#: theme.json
+msgctxt "Custom template name"
+msgid "Page (No Title)"
+msgstr ""
+
+#: styles/dusty-rose.json
+msgctxt "Style variation name"
+msgid "Dusty Rose"
+msgstr ""
+
+#: styles/nordic.json
+msgctxt "Style variation name"
+msgid "Nordic"
+msgstr ""
+
+#: styles/primary.json
+msgctxt "Style variation name"
+msgid "Primary"
+msgstr ""
+
+#: styles/sapphire-sun.json
+msgctxt "Style variation name"
+msgid "Sapphire Sun"
+msgstr ""
+
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Rich Black"
+msgstr ""
+
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Oxford Blue"
+msgstr ""
+
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Yale Blue"
+msgstr ""
+
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Mikado Yellow"
+msgstr ""
+
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Gold"
+msgstr ""
+
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Vanilla"
+msgstr ""
+
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Base Midtone"
+msgstr ""
+
+#: styles/sapphire-sun.json
+msgctxt "Color name"
+msgid "Contrast Midtone"
+msgstr ""

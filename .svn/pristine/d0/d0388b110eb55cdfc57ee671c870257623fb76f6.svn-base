@@ -1,0 +1,9 @@
+.wp-block-navigation__responsive-container:not(.is-menu-open.is-menu-open) {
+    background-color: inherit !important;
+    color: inherit !important;
+}
+
+.flexa-nav-item-wrap {
+    display: contents;
+    list-style: none;
+}

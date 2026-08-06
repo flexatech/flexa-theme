@@ -1,0 +1,107 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/theme.json",
+	"version": 2,
+	"title": "Sapphire Sun",
+	"settings": {
+		"color": {
+			"palette": [
+				{
+					"name": "Base",
+					"slug": "base",
+					"color": "#ffffff"
+				},
+				{
+					"name": "Contrast",
+					"slug": "contrast",
+					"color": "#1a1a2e"
+				},
+				{
+					"name": "Accent",
+					"slug": "accent",
+					"color": "#c0392b"
+				},
+				{
+					"name": "Accent Light",
+					"slug": "accent-light",
+					"color": "#FFF3AD"
+				},
+				{
+					"name": "Subtle",
+					"slug": "subtle",
+					"color": "#f4f4f4"
+				},
+				{
+					"name": "Muted",
+					"slug": "muted",
+					"color": "#323232"
+				},
+				{
+					"name": "Rich Black",
+					"slug": "accent-1",
+					"color": "#000814"
+				},
+				{
+					"name": "Oxford Blue",
+					"slug": "accent-2",
+					"color": "#001D3D"
+				},
+				{
+					"name": "Yale Blue",
+					"slug": "accent-3",
+					"color": "#003566"
+				},
+				{
+					"name": "Mikado Yellow",
+					"slug": "accent-4",
+					"color": "#FFC300"
+				},
+				{
+					"name": "Gold",
+					"slug": "accent-5",
+					"color": "#FFD60A"
+				},
+				{
+					"name": "Vanilla",
+					"slug": "accent-6",
+					"color": "#FFF3AD"
+				},
+				{
+					"name": "Base Midtone",
+					"slug": "base-midtone",
+					"color": "#f4f4f4"
+				},
+				{
+					"name": "Contrast Midtone",
+					"slug": "contrast-midtone",
+					"color": "#323232"
+				}
+			]
+		}
+	},
+	"styles": {
+		"color": {
+			"background": "var(--wp--preset--color--base)",
+			"text": "var(--wp--preset--color--contrast)"
+		},
+		"elements": {
+			"link": {
+				"color": {
+					"text": "var(--wp--preset--color--accent)"
+				}
+			},
+			"button": {
+				"color": {
+					"background": "var(--wp--preset--color--accent)",
+					"text": "var(--wp--preset--color--base)"
+				}
+			}
+		},
+		"blocks": {
+			"core/site-title": {
+				"color": {
+					"text": "var(--wp--preset--color--contrast)"
+				}
+			}
+		}
+	}
+}

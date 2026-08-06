@@ -1,0 +1,12 @@
+<?php
+/**
+ * Title: Query Pagination
+ * Slug: flexa/query-pagination
+ * Categories: flexa
+ */
+?>
+<!-- wp:query-pagination {"layout":{"type":"flex","justifyContent":"center"}} -->
+	<!-- wp:query-pagination-previous /-->
+	<!-- wp:query-pagination-numbers /-->
+	<!-- wp:query-pagination-next /-->
+<!-- /wp:query-pagination -->
