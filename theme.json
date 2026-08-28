@@ -3,6 +3,7 @@
     "version": 3,
     "settings": {
         "appearanceTools": true,
+        "useRootPaddingAwareAlignments": true,
         "color": {
             "palette": [
                 {
@@ -14,6 +15,21 @@
                     "name": "Contrast",
                     "slug": "contrast",
                     "color": "#111111"
+                },
+                {
+                    "name": "Primary",
+                    "slug": "primary",
+                    "color": "#5f7e64"
+                },
+                {
+                    "name": "Secondary",
+                    "slug": "secondary",
+                    "color": "#2f3e33"
+                },
+                {
+                    "name": "Neutral",
+                    "slug": "neutral",
+                    "color": "#f1f5f4"
                 },
                 {
                     "name": "Accent",
@@ -62,6 +78,11 @@
                     "fontFamily": "'Courier New', Courier, monospace",
                     "name": "System Mono",
                     "slug": "system-mono"
+                },
+                {
+                    "fontFamily": "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                    "name": "Inter",
+                    "slug": "inter"
                 }
             ],
             "fontSizes": [
@@ -150,6 +171,36 @@
                     "name": "XXL",
                     "size": "6rem",
                     "slug": "xxl"
+                },
+                {
+                    "name": "1",
+                    "size": "8px",
+                    "slug": "10"
+                },
+                {
+                    "name": "2",
+                    "size": "16px",
+                    "slug": "20"
+                },
+                {
+                    "name": "3",
+                    "size": "24px",
+                    "slug": "30"
+                },
+                {
+                    "name": "4",
+                    "size": "32px",
+                    "slug": "40"
+                },
+                {
+                    "name": "5",
+                    "size": "48px",
+                    "slug": "50"
+                },
+                {
+                    "name": "6",
+                    "size": "64px",
+                    "slug": "60"
                 }
             ]
         },
@@ -176,7 +227,13 @@
             "lineHeight": "1.7"
         },
         "spacing": {
-            "blockGap": "var(--wp--preset--spacing--m)"
+            "blockGap": "var(--wp--preset--spacing--m)",
+            "padding": {
+                "top": "0",
+                "bottom": "0",
+                "left": "var(--wp--preset--spacing--m)",
+                "right": "var(--wp--preset--spacing--m)"
+            }
         },
         "elements": {
             "link": {
@@ -357,6 +414,13 @@
                 "post"
             ],
             "title": "Blank"
+        },
+        {
+            "name": "page-with-title",
+            "postTypes": [
+                "page"
+            ],
+            "title": "Page (With Title)"
         },
         {
             "name": "page-no-title",

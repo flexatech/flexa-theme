@@ -24,6 +24,23 @@ function flexa_setup() {
 	add_theme_support( 'responsive-embeds' );
 	remove_theme_support( 'core-block-patterns' );
 	add_editor_style( array( 'style.css', 'assets/css/editor-style.css' ) );
+
+	/*
+	 * Classic menu locations.
+	 *
+	 * A block theme renders its own navigation through core/navigation, so these are not used by
+	 * any template file here. They exist because a generated header may be a plain markup part
+	 * that pulls the menu with wp_nav_menu( 'primary' ) instead of a navigation block - and
+	 * wp_nav_menu() returns nothing for a location the theme never registered, no matter that a
+	 * menu is assigned to it in theme mods. Registering them also brings back the Appearance ->
+	 * Menus screen, which is where that menu is edited afterwards.
+	 */
+	register_nav_menus(
+		array(
+			'primary' => __( 'Primary Menu', 'flexa' ),
+			'footer'  => __( 'Footer Menu', 'flexa' ),
+		)
+	);
 }
 add_action( 'after_setup_theme', 'flexa_setup' );
 

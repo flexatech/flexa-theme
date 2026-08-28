@@ -1,7 +1,7 @@
 /*
 Theme Name:        Flexa
 Description:       A minimal block starter theme. Flexa gives you a clean foundation - white, black, and one accent color - so you can build without clearing away what someone else put there first.
-Version:           1.1.1
+Version:           1.2.0
 Author:            flexatech
 Author URI:        https://profiles.wordpress.org/flexatech/
 Tags:              blog, one-column, block-patterns, full-site-editing, block-styles, editor-style, style-variations, custom-colors, featured-images, translation-ready
@@ -102,10 +102,19 @@ button {
     flex: 1;
 }
 
+/* Horizontal padding comes from theme.json root padding
+   (settings.useRootPaddingAwareAlignments), so full-width blocks can escape it.
+   Only the vertical rhythm is set here. */
 .site-header,
 .site-main,
 .site-footer {
-    padding: var(--wp--preset--spacing--s) var(--wp--preset--spacing--m);
+    padding-block: var(--wp--preset--spacing--s);
+}
+
+/* Templates whose content is a full-bleed layout (page / front page): the first
+   section has to sit flush against the header. */
+.site-main--flush {
+    padding-block: 0;
 }
 
 @media (max-width: 781px) {

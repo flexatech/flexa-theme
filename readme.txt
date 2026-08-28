@@ -3,7 +3,7 @@ Contributors: flexatech
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: blog, one-column, block-patterns, full-site-editing, block-styles, editor-style, style-variations, custom-colors, featured-images, translation-ready
@@ -52,6 +52,15 @@ Yes. You can create a child block theme and customise templates, styles, or patt
 Yes. Flexa is designed to work with WordPress core features and most well-coded plugins.
 
 == Changelog ==
+
+= 1.2.0 =
+* Added Primary, Secondary, and Neutral colors to the palette.
+* Added the Inter font family and a numeric spacing scale.
+* Enabled root-padding-aware alignments so full-width blocks can span edge to edge.
+* Redesigned the header and footer template parts.
+* Added a "Page (With Title)" page template.
+* Updated the Page and Front Page templates to use full-width content.
+* Registered Primary and Footer menu locations.
 
 = 1.1.1 =
 * Replaced the theme screenshot with a placeholder-text version containing no promotional text and no third-party or AI-generated images.
