@@ -1,7 +1,13 @@
 <!-- wp:group {"tagName":"footer","style":{"spacing":{"padding":{"top":"var:preset|spacing|40","bottom":"var:preset|spacing|40"}},"border":{"top":{"color":"var:preset|color|neutral","width":"1px"}}},"layout":{"type":"constrained"}} -->
 <footer class="wp-block-group" style="border-top-color:var(--wp--preset--color--neutral);border-top-width:1px;padding-top:var(--wp--preset--spacing--40);padding-bottom:var(--wp--preset--spacing--40)">
-	<!-- wp:paragraph {"align":"center","style":{"color":{"text":"#6b7280"}},"fontSize":"small"} -->
-	<p class="has-text-align-center has-small-font-size" style="color:#6b7280">© Flexa Theme — demo block theme.</p>
-	<!-- /wp:paragraph -->
+	<!-- wp:group {"layout":{"type":"flex","justifyContent":"center","flexWrap":"wrap"},"style":{"spacing":{"blockGap":"0.4em"}}} -->
+	<div class="wp-block-group">
+		<!-- wp:paragraph {"fontSize":"small"} -->
+		<p class="has-small-font-size">&copy;</p>
+		<!-- /wp:paragraph -->
+
+		<!-- wp:site-title {"level":0,"isLink":false,"fontSize":"small"} /-->
+	</div>
+	<!-- /wp:group -->
 </footer>
 <!-- /wp:group -->

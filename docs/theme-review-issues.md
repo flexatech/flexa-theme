@@ -6,9 +6,10 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 > Quy định ghi rõ: *"Themes that have 3 or more distinct issues may be closed as not-approved."*
 >
 > Rà soát ban đầu: **3 blocker + 4 nên sửa + 3 nhẹ**. Sau khi soi kỹ, mục #3 được hạ từ 🔴 xuống 🟠
-> (xem phần đính chính trong mục đó) → còn **2 blocker + 5 nên sửa + 3 nhẹ**.
+> (xem đính chính trong mục đó), và mục **#11 được phát hiện thêm** trong lúc sửa #4 → tổng
+> **2 blocker + 6 nên sửa + 3 nhẹ**.
 >
-> **Đã xử lý: #1, #2, #3.** Còn lại 5 mục.
+> **Đã xử lý: #1, #2, #3, #4.** Còn lại 7 mục.
 
 ---
 
@@ -19,13 +20,14 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 | 1 | 🔴 Blocker | Shortcode `[flexa_primary_menu]` trong template part (chưa đăng ký) | #5 | **[x] Đã sửa** |
 | 2 | 🔴 Blocker | Line-ending lẫn lộn CRLF + LF (11 file CRLF) | #9 | **[x] Đã sửa** |
 | 3 | 🟠 Nên sửa | Thiếu `:focus` cho ô form + điều khiển navigation | #3 | **[x] Đã sửa** |
-| 4 | 🟠 Nên sửa | Copyright tác giả theme hiển thị ở frontend | #1 | [ ] |
+| 4 | 🟠 Nên sửa | Copyright tác giả theme hiển thị ở frontend | #1 | **[x] Đã sửa** |
 | 5 | 🟠 Nên sửa | CSS rò rỉ sang wp-admin (enqueue sai hook) | #12 | [ ] |
 | 6 | 🟠 Nên sửa | `remove_theme_support( 'core-block-patterns' )` | #5 | [ ] |
 | 7 | 🟠 Nên sửa | Nguy cơ fatal error khi thiếu ext-dom | #4 | [ ] |
 | 8 | 🟡 Nhẹ | File `.pot` khai GPLv3, theme khai GPLv2 | #1 | [ ] |
 | 9 | 🟡 Nhẹ | Slug / text-domain / tên thư mục không khớp | #8 | [ ] |
 | 10 | 🟡 Nhẹ | Trùng tên block style `outline` với core | #4 | [ ] |
+| 11 | 🟠 Nên sửa | Preset `muted` fail contrast trên `nordic.json` (3.19) | #3 | [ ] |
 
 ---
 
@@ -240,8 +242,54 @@ copyright, not the theme author's copyright."*
 <p class="...">© Flexa Theme — demo block theme.</p>
 ```
 
-**Cách sửa:** thay bằng copyright động của site — khối `wp:site-title` kèm năm, thay vì tên
-thương hiệu theme. Chuỗi "demo block theme" cũng cần bỏ.
+### Ràng buộc: block theme không in được năm hiện tại
+
+`parts/footer.html` là **file HTML tĩnh**, không chạy PHP. Không core block nào xuất ra năm hiện
+tại, và thêm shortcode thì tái phạm đúng mục #5 vừa sửa ở lỗi #1. Nên "© {năm} {tên site}" không
+phải thứ lấy sẵn được.
+
+Tham chiếu: **Twenty Twenty-Five không có dòng © nào cả** — footer nó chỉ có site title, tagline,
+nav và một dòng *"Designed with WordPress"* (credit link mục #13 cho phép).
+
+**✅ ĐÃ SỬA** — bỏ năm, giữ tên site động:
+
+```html
+<!-- wp:group {"layout":{"type":"flex","justifyContent":"center","flexWrap":"wrap"},"style":{"spacing":{"blockGap":"0.4em"}}} -->
+<div class="wp-block-group">
+    <!-- wp:paragraph {"fontSize":"small"} -->
+    <p class="has-small-font-size">&copy;</p>
+    <!-- /wp:paragraph -->
+
+    <!-- wp:site-title {"level":0,"isLink":false,"fontSize":"small"} /-->
+</div>
+<!-- /wp:group -->
+```
+
+- Phải bọc group flex vì `wp:site-title` là block cấp khối, không nhét vào trong `wp:paragraph` được.
+- `isLink: false` để nó là text thuần — nếu để link nó ăn style link (gạch chân + accent), lạc lõng
+  trong footer. Người dùng bật lại được trong Site Editor.
+- Không có năm: mục #1 chỉ yêu cầu *"must only display the user's copyright"*, **không** bắt có năm.
+  Bỏ năm thì không bao giờ lỗi thời, không cần PHP, footer vẫn là HTML thuần như mọi part khác.
+
+**Phương án đã cân nhắc và loại:** đổi `parts/footer.html` thành `<!-- wp:pattern {"slug":"flexa/footer"} /-->`
+rồi viết `patterns/footer.php` (đúng cơ chế TT5) để có PHP dùng `date_i18n( 'Y' )`. Loại vì ngay khi
+người dùng sửa footer trong Site Editor, Gutenberg bung `wp:pattern` thành markup thật và **năm bị
+đóng băng** tại thời điểm đó.
+
+### Sửa kèm: bỏ mã màu cứng `#6b7280`
+
+Dòng cũ có `style="color:#6b7280"` — hex cứng, style variation không đổi được, và **đang fail
+contrast thật**:
+
+| Bảng màu | Tỉ lệ | |
+|---|---|---|
+| dark (`#6b7280` trên `#111111`) | **3.91** | ❌ dưới 4.5 |
+| các bảng còn lại | 4.59 – 4.83 | ✅ |
+
+Đã **bỏ hẳn thuộc tính màu** để chữ kế thừa màu body (`contrast`, an toàn theo định nghĩa ở mọi
+variation) — đúng cách TT5 làm, không override màu ở footer.
+
+Không dùng preset `muted` thay thế, vì nó còn tệ hơn ở chỗ khác — xem mục #11.
 
 ---
 
@@ -336,6 +384,38 @@ cho block này → ghi đè / trùng lặp.
 
 **Cách sửa:** đổi tên style thành có prefix (`flexa-outline`) hoặc bỏ hẳn và chỉ style lại
 `is-style-outline` của core qua CSS.
+
+---
+
+### 11. Preset `muted` fail contrast trên `nordic.json`
+
+**Vi phạm:** Mục #3 (Accessibility)
+**Vị trí:** `styles/nordic.json` — palette `muted`
+
+Phát hiện khi tính contrast cho mục #4. Không phải màu trang trí — `muted` đang dùng cho **chữ thật**
+ở `style.css:185` (`.post-meta`) và `patterns/single-post-header.php:10` (ngày đăng, tác giả).
+
+| Bảng màu | muted | base | Tỉ lệ | (cần 4.5 cho chữ thường) |
+|---|---|---|---|---|
+| theme.json | `#707070` | `#ffffff` | 4.95 | ✅ |
+| dark | `#9a9a9a` | `#111111` | 6.71 | ✅ |
+| dusty-rose | `#7c6464` | `#fdf8f7` | 5.16 | ✅ |
+| **nordic** | **`#7a8f9e`** | **`#f8f9fb`** | **3.19** | ❌ |
+| primary | `#6c6c80` | `#ffffff` | 5.13 | ✅ |
+| sapphire-sun | `#323232` | `#ffffff` | 12.82 | ✅ |
+
+**Cách sửa:** làm tối `muted` của nordic lại, giữ nguyên sắc xanh xám của bảng màu. Đã tính sẵn vài
+ứng viên trên nền `#f8f9fb`:
+
+| Màu | Tỉ lệ | |
+|---|---|---|
+| `#7a8f9e` (hiện tại) | 3.19 | ❌ |
+| `#647889` | 4.34 | ❌ vẫn thiếu |
+| `#5f7181` | 4.79 | ✅ |
+| `#5c6e7d` | 5.01 | ✅ có biên an toàn hơn |
+
+Đề xuất `#5f7181`. Cần xem mắt thường trên `nordic` trước khi chốt — con số đạt không có nghĩa là
+nhìn vẫn còn ra chất "muted".
 
 ---
 
