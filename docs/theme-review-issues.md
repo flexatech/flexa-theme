@@ -8,7 +8,7 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 > Rà soát ban đầu: **3 blocker + 4 nên sửa + 3 nhẹ**. Sau khi soi kỹ: #3 hạ 🔴→🟠, #6 hạ 🟠→🟡, và
 > **#11 được phát hiện thêm** trong lúc sửa #4 → tổng **2 blocker + 5 nên sửa + 4 nhẹ**.
 >
-> **Đã xử lý: #1, #2, #3, #4, #5, #6.** Còn lại 5 mục.
+> **Đã xử lý: #1, #2, #3, #4, #5, #6, #7.** Còn lại 4 mục: #8, #9, #10, #11.
 >
 > ⚠️ Ba mục từng bị trích sai điều khoản, đã đính chính tại chỗ: **#3** (bỏ sót `theme.json`),
 > **#5** (mục #12 không áp), **#6** (theme-support flag không phải hook).
@@ -25,7 +25,7 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 | 4 | 🟠 Nên sửa | Copyright tác giả theme hiển thị ở frontend | #1 | **[x] Đã sửa** |
 | 5 | 🟠 Nên sửa | CSS rò rỉ sang wp-admin (enqueue sai hook) | — | **[x] Đã sửa** |
 | 6 | 🟡 Nhẹ | `remove_theme_support( 'core-block-patterns' )` | — | **[x] Đã sửa** |
-| 7 | 🟠 Nên sửa | Nguy cơ fatal error khi thiếu ext-dom | #4 | [ ] |
+| 7 | 🟠 Nên sửa | Nguy cơ fatal error khi thiếu ext-dom (code chết) | #4 | **[x] Đã sửa** |
 | 8 | 🟡 Nhẹ | File `.pot` khai GPLv3, theme khai GPLv2 | #1 | [ ] |
 | 9 | 🟡 Nhẹ | Slug / text-domain / tên thư mục không khớp | #8 | [ ] |
 | 10 | 🟡 Nhẹ | Trùng tên block style `outline` với core | #4 | [ ] |
@@ -419,21 +419,68 @@ plugin làm, hoặc ghi vào `readme.txt` như đoạn code gợi ý cho child t
 ### 7. Nguy cơ fatal error khi host thiếu ext-dom
 
 **Vi phạm:** Mục #4 — *"There must not be any PHP or JavaScript errors, warnings, or notices."*
-**Vị trí:** `inc/template-functions.php:21`
+**Vị trí:** `inc/template-functions.php` (đã xoá)
+
+`new DOMDocument()` không có guard `class_exists()`. WordPress tự xếp `dom` là **tuỳ chọn**:
 
 ```php
-$dom = new DOMDocument();
+// wp-admin/includes/class-wp-site-health.php:946-949
+'dom' => array( 'class' => 'DOMNode', 'required' => false ),
 ```
 
-Không kiểm tra `class_exists( 'DOMDocument' )`. Trên host không bật extension `dom` sẽ
-**fatal error mỗi lần render** block navigation / page-list.
+Trên Debian/Ubuntu nó nằm ở gói `php-xml` tách rời. Không có → **fatal error mỗi lần render**
+navigation/page-list. Reviewer chạy môi trường chuẩn có `dom` nên gần như chắc chắn không gặp — đây
+là rủi ro cho người dùng thật, không phải thứ làm rớt review.
 
-**Cách sửa:** thêm guard đầu hàm:
+**✅ ĐÃ SỬA — xoá hẳn, không phải thêm guard.** Test hàm đó độc lập (nó không gọi hàm WordPress nào)
+cho thấy nó là code chết:
+
+**1. Không đổi gì với markup mà WP 6.5+ thực sự xuất ra**
+
+| Trường hợp | Kết quả |
+|---|---|
+| Nav thuần `navigation-link` | không đổi |
+| Nav có `core/search` | không đổi |
+| Nav có `site-title` (core tự bọc `<li>`) | không đổi |
+| `core/page-list` | không đổi |
+
+**2. Bất lực với chính trường hợp nó sinh ra để xử lý.** Cho `<ul>` chứa `<form>` trực tiếp:
+
+```
+CÂY DOM SAU loadHTML():
+  <nav>
+    <ul>
+      <li> → <a>
+    <form> → <input>      ← libxml đã đẩy RA NGOÀI <ul>
+
+Con trực tiếp của <ul>: li
+```
+
+`libxml` tự sửa cấu trúc **ngay lúc phân tích** — đóng `<ul>` trước `<form>`. Khi hàm bắt đầu duyệt
+thì không còn gì để tìm, `$changed` giữ `false`, trả về nguyên bản.
+
+**3. Chỉ kích hoạt với thứ core không bao giờ tạo ra**
+
+| Chèn vào `<ul>` | Filter chạy? |
+|---|---|
+| `form`, `script` | không |
+| `div`, `span`, `p`, `nav`, `a`, `button`, `ul` lồng | có |
+
+Nhưng từ WP 6.5 `WP_Navigation_Block_Renderer` **đóng `<ul>`** khi gặp block không phải list item
+(`navigation.php:281-296`), kể cả `core/spacer` vốn render `<div>`. Mà `style.css` ghi
+`Requires at least: 6.5`. Nên chỉ plugin/block tuỳ biến nhét thẳng `<div>` vào `<ul>` mới chạm tới.
+
+**4. Cái giá:** `0.093 ms` mỗi lần render navigation **và** page-list (đo 2000 lần, menu 8 mục), để
+không làm gì. Cộng `libxml_use_internal_errors( true )` **không khôi phục** → tắt libxml error
+reporting cho toàn bộ request còn lại, ảnh hưởng cả plugin khác.
+
+**Đã xoá:** `inc/template-functions.php`, dòng include trong `functions.php`, và rule CSS chết
+`.flexa-nav-item-wrap` ở `assets/css/block-style.css`.
+
+**Nếu sau này thật sự cần bọc `<li>`:** core có sẵn extension point từ 6.5, một dòng, không cần DOM:
 
 ```php
-if ( ! class_exists( 'DOMDocument' ) ) {
-    return $block_content;
-}
+add_filter( 'block_core_navigation_listable_blocks', 'flexa_listable_blocks' );
 ```
 
 ---
