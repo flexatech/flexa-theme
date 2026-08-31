@@ -23,7 +23,20 @@ function flexa_setup() {
 	) );
 	add_theme_support( 'responsive-embeds' );
 	remove_theme_support( 'core-block-patterns' );
-	add_editor_style( array( 'style.css', 'assets/css/editor-style.css' ) );
+	/*
+	 * Editor styles load INSIDE the editor's iframe, which is the only way rules reach the canvas.
+	 * block-styles.css is in this list for that reason: it used to arrive in wp-admin by accident,
+	 * through a stylesheet enqueued on `init` (see inc/block-styles.php), and even then it never
+	 * reached the canvas because print_admin_styles() writes to the parent document, not the frame.
+	 * So the button Outline and separator Wavy styles were missing from the editor the whole time.
+	 */
+	add_editor_style(
+		array(
+			'style.css',
+			'assets/css/editor-style.css',
+			'assets/css/block-styles.css',
+		)
+	);
 
 	/*
 	 * Classic menu locations.

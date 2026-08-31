@@ -9,7 +9,7 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 > (xem đính chính trong mục đó), và mục **#11 được phát hiện thêm** trong lúc sửa #4 → tổng
 > **2 blocker + 6 nên sửa + 3 nhẹ**.
 >
-> **Đã xử lý: #1, #2, #3, #4.** Còn lại 7 mục.
+> **Đã xử lý: #1, #2, #3, #4, #5.** Còn lại 6 mục.
 
 ---
 
@@ -21,7 +21,7 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 | 2 | 🔴 Blocker | Line-ending lẫn lộn CRLF + LF (11 file CRLF) | #9 | **[x] Đã sửa** |
 | 3 | 🟠 Nên sửa | Thiếu `:focus` cho ô form + điều khiển navigation | #3 | **[x] Đã sửa** |
 | 4 | 🟠 Nên sửa | Copyright tác giả theme hiển thị ở frontend | #1 | **[x] Đã sửa** |
-| 5 | 🟠 Nên sửa | CSS rò rỉ sang wp-admin (enqueue sai hook) | #12 | [ ] |
+| 5 | 🟠 Nên sửa | CSS rò rỉ sang wp-admin (enqueue sai hook) | — | **[x] Đã sửa** |
 | 6 | 🟠 Nên sửa | `remove_theme_support( 'core-block-patterns' )` | #5 | [ ] |
 | 7 | 🟠 Nên sửa | Nguy cơ fatal error khi thiếu ext-dom | #4 | [ ] |
 | 8 | 🟡 Nhẹ | File `.pot` khai GPLv3, theme khai GPLv2 | #1 | [ ] |
@@ -295,14 +295,61 @@ Không dùng preset `muted` thay thế, vì nó còn tệ hơn ở chỗ khác �
 
 ### 5. CSS rò rỉ sang wp-admin (enqueue sai hook)
 
-**Vi phạm:** Liên quan mục #12 — *"they cannot leak/spill out to other WordPress admin pages"*
-**Vị trí:** `inc/block-styles.php:25-32`
+**Vị trí:** `inc/block-styles.php:25-32` (cũ)
 
-`wp_enqueue_style( 'flexa-block-styles', … )` được gọi trên hook `init`, không phải
-`wp_enqueue_scripts`. Hàng đợi style là global nên file này sẽ nạp **cả trong wp-admin**.
+> **⚠️ Đính chính:** bản đầu ghi *"Liên quan mục #12 — they cannot leak/spill out to other WordPress
+> admin pages"*. **Trích sai.** Mục #12 thuộc phần *"Theme settings pages and onboarding"* — nó cấm
+> CSS của **trang admin do theme tạo ra** tràn sang trang admin khác. Theme này không có trang admin
+> nào, nên câu đó không áp trực tiếp.
+>
+> Đây là **dùng sai API**, không phải vi phạm một điều khoản cụ thể. Reviewer vẫn bắt, nhưng dưới
+> dạng code quality. Cột "Mục" đổi thành `—`.
 
-**Cách sửa:** tách ra — giữ `wp_enqueue_block_style()` ở `init` (đúng), chuyển
-`wp_enqueue_style()` sang hook `wp_enqueue_scripts`.
+**Cơ chế** — truy trong core:
+
+```
+wp-admin/admin-header.php:137        do_action( 'admin_print_styles' )
+wp-admin/includes/admin-filters.php:64  add_action( 'admin_print_styles', 'print_admin_styles', 20 )
+wp-includes/script-loader.php        print_admin_styles() → $wp_styles->do_items( false )
+```
+
+`do_items( false )` duyệt **toàn bộ** queue, không lọc. Mà `init` chạy trên cả request admin. Nên
+`wp_enqueue_style()` đặt ở `init` khiến `block-styles.css` tải trên **mọi trang wp-admin** — mỗi
+trang một request thừa, kèm `border: none !important` ([block-styles.css:19](../assets/css/block-styles.css))
+rơi vào những trang không hề cần.
+
+**Và nó không đổi lại được gì.** Editor từ WP 6.x render trong **iframe**; `print_admin_styles()` ghi
+ra document cha nên các rule này **không** vào tới canvas. Sai cả hai đầu: bẩn admin chrome, mà
+editor vẫn thiếu style.
+
+**✅ ĐÃ SỬA** — hai thay đổi, cả hai đều cần:
+
+1. **`inc/block-styles.php`** — tách hàm. `wp_enqueue_block_style()` **giữ ở `init`** (đúng chỗ: nó
+   không enqueue gì cả, chỉ đăng ký callback để core chạy lúc block render). `wp_enqueue_style()`
+   chuyển sang `wp_enqueue_scripts`.
+2. **`inc/setup.php`** — thêm `assets/css/block-styles.css` vào `add_editor_style()`. Đây là cơ chế
+   nạp CSS vào **trong iframe** của editor. Không có bước này thì bản sửa là một regression trá
+   hình: nút Outline và separator Wavy sẽ không hiển thị đúng trong editor.
+
+**Kiểm chứng thực tế** (không chỉ đọc code): `wp-login.php` dùng **chính** `print_admin_styles()` như
+wp-admin (`default-filters.php:395`), nên nó là proxy kiểm tra được mà không cần đăng nhập.
+
+| | `flexa-block-styles-css` trên `wp-login.php` | trên front-end |
+|---|---|---|
+| Code cũ (`git stash`) | **có** ❌ | có |
+| Code mới | **không** ✅ | có ✅ |
+
+**Cải tiến để cân nhắc sau (không làm bây giờ):** tách `block-styles.css` thành `block-button.css` +
+`block-separator.css` rồi dùng `wp_enqueue_block_style()` cho từng block — được conditional loading,
+trang không có separator thì không tải CSS separator. Vẫn phải giữ bước `add_editor_style()` vì
+`wp_enqueue_block_style()` chỉ hook vào front-end:
+
+```php
+// script-loader.php, wp_enqueue_block_style()
+$hook = did_action( 'wp_enqueue_scripts' ) ? 'wp_footer' : 'wp_enqueue_scripts';
+```
+
+Đây là tối ưu hiệu năng, không phải sửa lỗi.
 
 ---
 
