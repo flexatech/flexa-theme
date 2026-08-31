@@ -55,16 +55,18 @@ add_action( 'wp_enqueue_scripts', 'flexa_enqueue_block_stylesheet' );
 
 /**
  * Register custom block styles.
+ *
+ * Only Wavy. core/separator ships default, wide and dots, so wavy is genuinely new.
+ *
+ * core/button's Outline is NOT registered here, because core already declares it in
+ * blocks/button/block.json and styles it in blocks/button/style.css. Registering the same
+ * name again added a second entry to WP_Block_Styles_Registry beside core's own, silently -
+ * the registry overwrites without a notice, so nothing ever reported the collision.
+ *
+ * Losing the call does not lose the style. `is-style-outline` comes from core either way,
+ * which is exactly what assets/css/block-styles.css restyles.
  */
 function flexa_register_block_styles() {
-	register_block_style(
-		'core/button',
-		array(
-			'name'  => 'outline',
-			'label' => __( 'Outline', 'flexa' ),
-		)
-	);
-
 	register_block_style(
 		'core/separator',
 		array(

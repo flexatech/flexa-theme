@@ -28,7 +28,7 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 | 7 | 🟠 Nên sửa | Nguy cơ fatal error khi thiếu ext-dom (code chết) | #4 | **[x] Đã sửa** |
 | 8 | 🟠 Nên sửa | File `.pot` khai GPLv3 **và thiếu 14 chuỗi** | #1, #8 | **[x] Đã sửa** |
 | 9 | 🟡 Nhẹ | Slug / text-domain / tên thư mục không khớp | #8 | [ ] |
-| 10 | 🟡 Nhẹ | Trùng tên block style `outline` với core | #4 | [ ] |
+| 10 | 🟡 Nhẹ | Trùng tên block style `outline` với core | — | **[x] Đã sửa** |
 | 11 | 🟠 Nên sửa | Preset `muted` fail contrast trên `nordic.json` (3.19) | #3 | [ ] |
 
 ---
@@ -568,13 +568,36 @@ ai đó zip thủ công.
 
 ### 10. Trùng tên block style `outline` với core
 
-**Vị trí:** `inc/block-styles.php:38-45`
+**Vị trí:** `inc/block-styles.php:60-66` (cũ)
 
-Đăng ký block style tên `outline` cho `core/button`, nhưng core **đã có sẵn** `is-style-outline`
-cho block này → ghi đè / trùng lặp.
+Core đã khai `outline` cho `core/button` ngay trong block.json:
 
-**Cách sửa:** đổi tên style thành có prefix (`flexa-outline`) hoặc bỏ hẳn và chỉ style lại
-`is-style-outline` của core qua CSS.
+```jsonc
+// wp-includes/blocks/button/block.json:143-144
+"styles": [
+  { "name": "fill", "label": "Fill", "isDefault": true },
+  { "name": "outline", "label": "Outline" }
+]
+```
+
+kèm CSS ở `blocks/button/style.css:78-88`. Theme đăng ký lại **cùng tên** → thêm một entry thứ hai
+vào `WP_Block_Styles_Registry` bên cạnh cái của core.
+
+`WP_Block_Styles_Registry::register()` **không kiểm tra trùng** — nó ghi thẳng vào
+`registered_block_styles[$block][$name]`, không `_doing_it_wrong`, không `WP_Error`. Nên va chạm này
+diễn ra hoàn toàn im lặng, không gì báo.
+
+**Đối chiếu `core/separator`:** core chỉ có `default`, `wide`, `dots` — **không** có `wavy`. Nên
+đăng ký `wavy` là bổ sung thật, đúng chỗ, **giữ nguyên**.
+
+**✅ ĐÃ SỬA** — bỏ đăng ký `outline`, giữ `wavy`.
+
+**Không mất gì.** `is-style-outline` vẫn do core cung cấp, và đó chính là class mà
+`assets/css/block-styles.css:4-13` nhắm tới để đổi giao diện. Theme vẫn restyle được nút Outline như
+cũ — nó chỉ thôi khai lại một style vốn đã tồn tại.
+
+> Chuỗi `__( 'Outline', 'flexa' )` biến mất theo, nên `.pot` đã được regenerate lại trong cùng thay
+> đổi này. Xem lệnh ở mục #8.
 
 ---
 
