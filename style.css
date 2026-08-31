@@ -257,13 +257,21 @@ button {
 /* ============================================================
    Accessibility: Keyboard Focus
 
-   theme.json already gives links and .wp-element-button a 2px accent
-   outline on :focus. These rules cover what an element selector cannot
-   reach, and add the offset theme.json does not set.
+   theme.json gives links and .wp-element-button a 2px accent outline on
+   :focus-visible. These rules cover what an element selector cannot reach
+   - form fields and the navigation's own buttons - and add the offset
+   theme.json does not set.
 
-   :focus-visible, so the ring appears for keyboard navigation and not on
-   a mouse click. Browsers that do not know the selector drop these rules
-   and still fall back to the theme.json :focus outline underneath.
+   :focus-visible everywhere, so the ring appears for keyboard navigation
+   and not on a mouse click. It used to be :focus in theme.json, which
+   matches a click too and left a box drawn around whatever was last
+   pressed until something else was.
+
+   That change cost the fallback this block used to lean on, so the block
+   carries its own now: see the @supports at the end. The guidelines ask
+   for visible keyboard focus on menus, form fields, submit buttons and
+   text links, and a browser that has never heard of :focus-visible has to
+   get one too.
 ============================================================ */
 
 /* Form fields. Nothing in this theme styles their focus, so until now they
@@ -296,6 +304,35 @@ textarea:focus-visible {
 a:focus-visible,
 .wp-element-button:focus-visible {
     outline-offset: 2px;
+}
+
+/* THE FALLBACK, for browsers with no :focus-visible.
+
+   Every rule above is inert there, and so is theme.json's - so without
+   this, those browsers get no ring at all on any of it. :focus is the
+   older behaviour: a ring on click as well, which is worse than the
+   modern result and much better than nothing.
+
+   `selector()` is itself newer than :focus-visible, so a browser that
+   understands neither drops the whole @supports block and keeps the
+   plain :focus ring its own UA stylesheet draws. */
+@supports not selector(:focus-visible) {
+
+    a:focus,
+    .wp-element-button:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: 2px solid var(--wp--preset--color--accent, currentColor);
+        outline-offset: 2px;
+    }
+
+    .wp-block-navigation__responsive-container-open:focus,
+    .wp-block-navigation__responsive-container-close:focus,
+    .wp-block-navigation-submenu__toggle:focus {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+    }
 }
 
 
