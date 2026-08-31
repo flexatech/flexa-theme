@@ -265,6 +265,9 @@
                     "text": "var(--wp--preset--color--base)"
                 },
                 "typography": {
+                    "fontFamily": "var(--wp--preset--font-family--display)",
+                    "fontSize": "var(--wp--preset--font-size--small)",
+                    "fontWeight": "600",
                     "textDecoration": "none"
                 },
                 ":hover": {
