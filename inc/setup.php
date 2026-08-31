@@ -28,12 +28,16 @@ function flexa_setup() {
 	/*
 	 * Classic menu locations.
 	 *
-	 * A block theme renders its own navigation through core/navigation, so these are not used by
-	 * any template file here. They exist because a generated header may be a plain markup part
-	 * that pulls the menu with wp_nav_menu( 'primary' ) instead of a navigation block - and
-	 * wp_nav_menu() returns nothing for a location the theme never registered, no matter that a
-	 * menu is assigned to it in theme mods. Registering them also brings back the Appearance ->
-	 * Menus screen, which is where that menu is edited afterwards.
+	 * Both header parts render core/navigation, so nothing here calls wp_nav_menu(). These are
+	 * still registered for two reasons.
+	 *
+	 * First, core reads them. A core/navigation block with no menu of its own falls back through
+	 * WP_Navigation_Fallback, and its first stop is the classic menu assigned to the "primary"
+	 * location - so registering the location is what lets a site that manages its menu in
+	 * Appearance -> Menus see that menu in the header at all.
+	 *
+	 * Second, registering is what puts the Appearance -> Menus screen back and gives the location
+	 * a checkbox there. Without it a menu can be assigned in theme mods but never edited by hand.
 	 */
 	register_nav_menus(
 		array(
