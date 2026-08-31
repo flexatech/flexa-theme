@@ -241,11 +241,14 @@
                     "text": "var(--wp--preset--color--accent)"
                 },
                 "typography": {
-                    "textDecoration": "underline"
+                    "textDecoration": "none"
                 },
                 ":hover": {
                     "color": {
                         "text": "var(--wp--preset--color--contrast)"
+                    },
+                    "typography": {
+                        "textDecoration": "underline"
                     }
                 },
                 ":focus": {
