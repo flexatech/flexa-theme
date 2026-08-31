@@ -5,11 +5,13 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 
 > Quy định ghi rõ: *"Themes that have 3 or more distinct issues may be closed as not-approved."*
 >
-> Rà soát ban đầu: **3 blocker + 4 nên sửa + 3 nhẹ**. Sau khi soi kỹ, mục #3 được hạ từ 🔴 xuống 🟠
-> (xem đính chính trong mục đó), và mục **#11 được phát hiện thêm** trong lúc sửa #4 → tổng
-> **2 blocker + 6 nên sửa + 3 nhẹ**.
+> Rà soát ban đầu: **3 blocker + 4 nên sửa + 3 nhẹ**. Sau khi soi kỹ: #3 hạ 🔴→🟠, #6 hạ 🟠→🟡, và
+> **#11 được phát hiện thêm** trong lúc sửa #4 → tổng **2 blocker + 5 nên sửa + 4 nhẹ**.
 >
-> **Đã xử lý: #1, #2, #3, #4, #5.** Còn lại 6 mục.
+> **Đã xử lý: #1, #2, #3, #4, #5, #6.** Còn lại 5 mục.
+>
+> ⚠️ Ba mục từng bị trích sai điều khoản, đã đính chính tại chỗ: **#3** (bỏ sót `theme.json`),
+> **#5** (mục #12 không áp), **#6** (theme-support flag không phải hook).
 
 ---
 
@@ -22,7 +24,7 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 | 3 | 🟠 Nên sửa | Thiếu `:focus` cho ô form + điều khiển navigation | #3 | **[x] Đã sửa** |
 | 4 | 🟠 Nên sửa | Copyright tác giả theme hiển thị ở frontend | #1 | **[x] Đã sửa** |
 | 5 | 🟠 Nên sửa | CSS rò rỉ sang wp-admin (enqueue sai hook) | — | **[x] Đã sửa** |
-| 6 | 🟠 Nên sửa | `remove_theme_support( 'core-block-patterns' )` | #5 | [ ] |
+| 6 | 🟡 Nhẹ | `remove_theme_support( 'core-block-patterns' )` | — | **[x] Đã sửa** |
 | 7 | 🟠 Nên sửa | Nguy cơ fatal error khi thiếu ext-dom | #4 | [ ] |
 | 8 | 🟡 Nhẹ | File `.pot` khai GPLv3, theme khai GPLv2 | #1 | [ ] |
 | 9 | 🟡 Nhẹ | Slug / text-domain / tên thư mục không khớp | #8 | [ ] |
@@ -355,13 +357,62 @@ $hook = did_action( 'wp_enqueue_scripts' ) ? 'wp_footer' : 'wp_enqueue_scripts';
 
 ### 6. `remove_theme_support( 'core-block-patterns' )`
 
-**Vi phạm:** Mục #5 — *"Do not: Remove non-presentational hooks."*
-**Vị trí:** `inc/setup.php:25`
+**Vị trí:** `inc/setup.php:25` (cũ)
 
-Gỡ toàn bộ pattern của core là gỡ một tính năng WordPress khỏi người dùng. Đây là điểm reviewer
-thường xuyên yêu cầu bỏ.
+> **⚠️ Đính chính:** bản đầu ghi *"Vi phạm mục #5 — Do not: Remove non-presentational hooks"*.
+> **Trích sai.** `core-block-patterns` là một **theme-support flag**, không phải hook — không có
+> `remove_action`/`remove_filter` nào ở đây. Danh sách cấm của mục #5 (paywall, ẩn admin bar,
+> redirect khi kích hoạt, gỡ hook) không phủ được việc này.
+>
+> **Không phải vi phạm rõ ràng nào cả.** Reviewer có thể hỏi, nhưng không có điều khoản để chỉ vào.
+> Hạ từ 🟠 xuống 🟡, cột "Mục" đổi thành `—`.
+>
+> Đây là lỗi trích dẫn thứ hai trong tài liệu này, sau mục #5.
 
-**Cách sửa:** xoá dòng này.
+**Dòng này làm nhiều hơn mô tả ban đầu.** Nó tắt **hai** thứ, không phải một:
+
+```php
+// block-patterns.php:72  — pattern đóng gói sẵn trong core
+$should_register_core_patterns = get_theme_support( 'core-block-patterns' );
+
+// block-patterns.php:290 và :329  — Pattern Directory từ xa
+$supports_core_patterns = get_theme_support( 'core-block-patterns' );
+$should_load_remote     = apply_filters( 'should_load_remote_block_patterns', true );
+if ( ! $should_load_remote || ! $supports_core_patterns ) { return; }
+```
+
+Nên nó **cũng chặn kết nối tới Pattern Directory của WordPress.org** — một lý do chính đáng có thật
+(riêng tư, hiệu năng). Có thể người viết cố ý.
+
+**Kiểm tra phụ thuộc trước khi gỡ:**
+
+| Kiểm tra | Kết quả |
+|---|---|
+| 12 pattern của theme | Tất cả `Categories: flexa`, không dùng category core |
+| 20 chỗ `wp:pattern` trong `templates/` + `patterns/` | Tất cả là slug `flexa/*` |
+| `_register_theme_block_patterns()` | **Độc lập**, không bị gate |
+| Core pattern **categories** | Đăng ký ở `block-patterns.php:96`+, **ngoài** khối `if` |
+| `theme.json` khai `patterns` | Không có |
+
+**✅ ĐÃ SỬA** — xoá hẳn dòng đó.
+
+Lý do, dù không phải vi phạm điều khoản: quyết định *"site này có dùng pattern của WordPress hay
+không"* là của **chủ site**, không phải của theme. Người dùng mất hàng chục pattern core cộng toàn
+bộ Pattern Directory mà **không có UI nào để bật lại** — muốn lấy lại phải sửa code theme.
+
+Mô tả trong `style.css` nói theme là nền sạch *"so you can build without clearing away what someone
+else put there first"*. "Someone else" ở đó là tác giả theme; pattern của core là của WordPress,
+không phải thứ theme này có quyền dọn hộ.
+
+**Phương án đã cân nhắc và loại:** nếu chỉ muốn chặn kết nối từ xa mà giữ pattern đóng gói sẵn, công
+cụ hẹp hơn là:
+
+```php
+add_filter( 'should_load_remote_block_patterns', '__return_false' );
+```
+
+Không ship cái này — vẫn là theme tự quyết thay người dùng, chỉ nhỏ hơn. Nếu ưu tiên riêng tư thì để
+plugin làm, hoặc ghi vào `readme.txt` như đoạn code gợi ý cho child theme.
 
 ---
 

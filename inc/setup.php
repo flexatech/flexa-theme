@@ -22,7 +22,7 @@ function flexa_setup() {
 		'gallery', 'caption', 'style', 'script', 'navigation-widgets',
 	) );
 	add_theme_support( 'responsive-embeds' );
-	remove_theme_support( 'core-block-patterns' );
+
 	/*
 	 * Editor styles load INSIDE the editor's iframe, which is the only way rules reach the canvas.
 	 * block-styles.css is in this list for that reason: it used to arrive in wp-admin by accident,
