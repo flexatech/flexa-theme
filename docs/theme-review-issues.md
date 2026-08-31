@@ -13,7 +13,7 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 | # | Mức | Vi phạm | Mục | Trạng thái |
 |---|-----|---------|-----|------------|
 | 1 | 🔴 Blocker | Shortcode `[flexa_primary_menu]` trong template part (chưa đăng ký) | #5 | **[x] Đã sửa** |
-| 2 | 🔴 Blocker | Line-ending lẫn lộn CRLF + LF (11 file CRLF) | #9 | [ ] |
+| 2 | 🔴 Blocker | Line-ending lẫn lộn CRLF + LF (11 file CRLF) | #9 | **[x] Đã sửa** |
 | 3 | 🔴 Blocker | Không có style `:focus` cho điều hướng bàn phím | #3 | [ ] |
 | 4 | 🟠 Nên sửa | Copyright tác giả theme hiển thị ở frontend | #1 | [ ] |
 | 5 | 🟠 Nên sửa | CSS rò rỉ sang wp-admin (enqueue sai hook) | #12 | [ ] |
@@ -110,16 +110,48 @@ git ls-files --eol
 **36 file còn lại là LF** — kể cả 2 file cùng thư mục `patterns/` là `404-content.php`
 và `page-comments.php`, nên ngay trong một thư mục đã lẫn 2 kiểu.
 
-**Cách sửa** (chạy trong thư mục theme):
+**✅ ĐÃ SỬA** — thêm `.gitattributes` + renormalize:
 
 ```bash
-git config core.autocrlf false
-printf '* text=auto eol=lf\n*.png binary\n' > .gitattributes
+git config core.autocrlf false          # config máy, không đi theo repo
+# .gitattributes: * text=auto eol=lf, + danh sách binary, + *.sh pin riêng
 git add --renormalize .
-git commit -m "Normalize all line endings to LF"
+git checkout-index -f -a                # KHÔNG đủ, xem ghi chú bên dưới
 ```
 
-> Thêm `.gitattributes` là bắt buộc. Nếu không, `autocrlf` sẽ tái tạo lại vấn đề ở lần checkout sau.
+`.gitattributes` là phần bắt buộc, không phải `core.autocrlf`. `autocrlf` là config **per-máy**,
+không clone theo được, nên nó khiến zip đúng hay sai phụ thuộc vào máy của người chạy `release.sh`.
+`eol=lf` trong `.gitattributes` ghi đè `autocrlf` và đi theo repo → kết quả giống nhau trên
+Windows / macOS / Linux / CI.
+
+Dùng `eol=lf` chứ không chỉ `text=auto`, vì `release.sh` rsync **working tree** vào zip — nên
+working tree mới là thứ thật sự được ship, không phải index.
+
+> **⚠️ Bẫy khi refresh working tree:** sau `git add --renormalize .` thì **index** đã LF nhưng
+> **working tree vẫn CRLF**, và `git checkout-index -f -a` *không* ghi đè (Git coi file đã
+> up-to-date qua stat cache). Phải ép:
+>
+> ```bash
+> git rm --cached -r -q .
+> git reset --hard
+> ```
+>
+> Chạy khi working tree đã sạch. Không có bước này thì repo đúng nhưng zip build ra vẫn CRLF.
+
+**Kết quả kiểm chứng:**
+
+```
+git ls-files --eol | awk '{print $1,$2}' | sort | uniq -c
+      2 i/-text w/-text        (screenshot.png, .DS_Store)
+     48 i/lf    w/lf           (toàn bộ file text, index VÀ working tree)
+
+git diff --cached --ignore-cr-at-eol   → rỗng (nội dung không đổi 1 ký tự)
+```
+
+Quét byte-level toàn thư mục (kể cả file chưa track): 48/48 file text đều `crlf=0`, không file nào lẫn.
+
+> **Chưa kiểm chứng được:** máy này thiếu `rsync` và `zip` nên không chạy được `release.sh` để soi
+> eol trong zip thật. Cần chạy lại trên máy có 2 tool đó trước khi nộp.
 
 ---
 
