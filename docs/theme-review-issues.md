@@ -8,7 +8,7 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 > Rà soát ban đầu: **3 blocker + 4 nên sửa + 3 nhẹ**. Sau khi soi kỹ: #3 hạ 🔴→🟠, #6 hạ 🟠→🟡, và
 > **#11 được phát hiện thêm** trong lúc sửa #4 → tổng **2 blocker + 5 nên sửa + 4 nhẹ**.
 >
-> **Đã xử lý: #1, #2, #3, #4, #5, #6, #7.** Còn lại 4 mục: #8, #9, #10, #11.
+> **Đã xử lý: #1, #2, #3, #4, #5, #6, #7, #8.** Còn lại 3 mục: #9, #10, #11.
 >
 > ⚠️ Ba mục từng bị trích sai điều khoản, đã đính chính tại chỗ: **#3** (bỏ sót `theme.json`),
 > **#5** (mục #12 không áp), **#6** (theme-support flag không phải hook).
@@ -26,7 +26,7 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 | 5 | 🟠 Nên sửa | CSS rò rỉ sang wp-admin (enqueue sai hook) | — | **[x] Đã sửa** |
 | 6 | 🟡 Nhẹ | `remove_theme_support( 'core-block-patterns' )` | — | **[x] Đã sửa** |
 | 7 | 🟠 Nên sửa | Nguy cơ fatal error khi thiếu ext-dom (code chết) | #4 | **[x] Đã sửa** |
-| 8 | 🟡 Nhẹ | File `.pot` khai GPLv3, theme khai GPLv2 | #1 | [ ] |
+| 8 | 🟠 Nên sửa | File `.pot` khai GPLv3 **và thiếu 14 chuỗi** | #1, #8 | **[x] Đã sửa** |
 | 9 | 🟡 Nhẹ | Slug / text-domain / tên thư mục không khớp | #8 | [ ] |
 | 10 | 🟡 Nhẹ | Trùng tên block style `outline` với core | #4 | [ ] |
 | 11 | 🟠 Nên sửa | Preset `muted` fail contrast trên `nordic.json` (3.19) | #3 | [ ] |
@@ -489,17 +489,63 @@ add_filter( 'block_core_navigation_listable_blocks', 'flexa_listable_blocks' );
 
 ### 8. File `.pot` khai sai giấy phép
 
-**Vi phạm:** Mục #1
-**Vị trí:** `languages/flexa.pot:2`
+**Vi phạm:** Mục #1 (giấy phép) **và** mục #8 (*"All text strings must be translatable"*)
+**Vị trí:** `languages/flexa.pot`
+
+> **⚠️ Nâng mức:** ban đầu xếp 🟡 vì tưởng chỉ sai 1 dòng giấy phép. Kiểm tra kỹ thì file `.pot`
+> **stale toàn diện** — nó được sinh ngày 2026-06-27 cho version **1.0.0** và chưa regenerate lần
+> nào kể từ đó, trong khi theme đã lên 1.2.0 qua 3 lần release. Nâng lên 🟠.
+
+**Bốn thứ sai cùng lúc:**
+
+| | Cũ | Đúng |
+|---|---|---|
+| Giấy phép | GNU GPL **v3** or later | GPL **v2** or later |
+| `Project-Id-Version` | Flexa **1.0.0** | Flexa **1.2.0** |
+| Số chuỗi | 60 | **74** |
+| Line refs | `inc/block-styles.php:42, :50` | `:64, :72` |
+
+Dòng GPLv3 là tàn dư: changelog 1.1.1 ghi *"Unified the theme license to GPLv2 or later across
+style.css and readme.txt"* — sửa 2 file đó nhưng quên `.pot`.
+
+**14 chuỗi bị thiếu hoàn toàn** (dịch giả không bao giờ thấy để dịch):
 
 ```
-# This file is distributed under the GNU General Public License v3 or later.
+"Primary Menu"  "Footer Menu"          ← register_nav_menus, thêm ở 1.2.0
+"Dark"                                 ← style variation, thêm ở 1.1.0
+"Inter"  "Neutral"  "Secondary"        ← palette + font, thêm ở 1.2.0
+"Page (With Title)"                    ← custom template, thêm ở 1.2.0
+"1" "2" "3" "4" "5" "6"                ← thang spacing, thêm ở 1.2.0
 ```
 
-Trong khi `style.css` và `readme.txt` đều khai **GPLv2 or later**.
+`styles/dark.json` không được tham chiếu một lần nào (giờ: 7 lần).
 
-**Cách sửa:** sửa header `.pot` thành GPLv2 or later cho thống nhất (hoặc regenerate bằng
-`wp i18n make-pot` sau khi cấu hình đúng).
+**✅ ĐÃ SỬA** — regenerate bằng chính công cụ đã sinh ra nó (`X-Generator: WP-CLI 2.12.0`):
+
+```bash
+wp i18n make-pot . languages/flexa.pot --domain=flexa --exclude=docs,dist \
+   --headers='{"Report-Msgid-Bugs-To":"https://wordpress.org/support/theme/flexa"}'
+```
+
+Giấy phép và version giờ đọc thẳng từ `style.css` nên tự khớp. 74 chuỗi, **không mất chuỗi nào**
+(diff chỉ có dòng `>`, không có `<`).
+
+> **Vì sao phải truyền `--headers` thủ công:** `make-pot` suy ra slug từ **tên thư mục**, nên nó tự
+> ghi `.../theme/flexa-theme`. Đó chính là triệu chứng của mục **#9** rò vào file này. Ép về `flexa`
+> cho khớp với Text Domain và `SLUG` trong `release.sh`. Sau khi #9 xong (đổi tên thư mục thành
+> `flexa`) thì cờ này không còn cần nữa.
+
+**Ghi chú môi trường:** máy này không có `wp` trên PATH. Đã tải `wp-cli.phar` về scratchpad và chạy
+bằng PHP của Local, cần bật thêm 3 extension mà PHP CLI mặc định không nạp:
+
+```
+-d extension=php_mbstring.dll   # make-pot bắt buộc
+-d extension=php_openssl.dll    # \
+-d extension=php_curl.dll       # / để tải theme-i18n.json cho việc trích chuỗi từ theme.json
+```
+
+**Cần làm lại `make-pot` mỗi khi:** thêm/sửa chuỗi dịch, đổi palette hoặc font trong `theme.json`,
+thêm style variation, thêm custom template, hoặc bump version.
 
 ---
 
