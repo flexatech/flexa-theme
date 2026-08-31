@@ -265,7 +265,7 @@
                     "text": "var(--wp--preset--color--base)"
                 },
                 "typography": {
-                    "fontFamily": "var(--wp--preset--font-family--display)",
+                    "fontFamily": "var(--wp--preset--font-family--display, var(--wp--preset--font-family--system-sans))",
                     "fontSize": "var(--wp--preset--font-size--small)",
                     "fontWeight": "600",
                     "textDecoration": "none"

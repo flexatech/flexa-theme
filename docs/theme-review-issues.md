@@ -17,6 +17,17 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 
 ---
 
+> **Rà soát vòng 2 (cùng ngày, sau khi 1.2.0 thêm palette `primary`/`secondary`/`neutral`).**
+>
+> 11 mục trên đã verify lại — sửa thật, không mục nào tái phát. Nhưng chính đợt thay đổi 1.2.0
+> làm phát sinh **2 lỗi mới, #12 và #13**, cả hai đều là tham chiếu preset trỏ vào chỗ không tồn
+> tại. Không mục nào là vi phạm điều khoản WP.org theo nghĩa hẹp — chúng là lỗi render. **Đã sửa,
+> và đã kiểm chứng bằng cách chạy thật `WP_Theme_JSON` của WP 7.1 chứ không chỉ đọc code.**
+>
+> Không bump version theo yêu cầu; `readme.txt` và `style.css` giữ nguyên `1.2.0`.
+
+---
+
 ## Tổng quan
 
 | # | Mức | Vi phạm | Mục | Trạng thái |
@@ -32,6 +43,8 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 | 9 | ⬜ Bỏ qua | Slug / text-domain / tên thư mục không khớp | #8 | **Có chủ đích** |
 | 10 | 🟡 Nhẹ | Trùng tên block style `outline` với core | — | **[x] Đã sửa** |
 | 11 | 🟠 Nên sửa | Preset `muted` fail contrast trên `nordic.json` (3.19) | #3 | **[x] Đã sửa** |
+| 12 | 🟠 Nên sửa | `--wp--preset--font-family--display` không tồn tại trong theme | #4 | **[x] Đã sửa** |
+| 13 | 🟠 Nên sửa | `primary`/`secondary`/`neutral` vắng mặt ở cả 5 style variation | #4 | **[x] Đã sửa** |
 
 ---
 
@@ -692,6 +705,140 @@ tự ghép tay là churn, không phải sửa lỗi.
 
 ---
 
+## 🟠 Vòng 2 — lỗi do 1.2.0 sinh ra
+
+### 12. `--wp--preset--font-family--display` không tồn tại trong theme
+
+**Vi phạm:** Mục #4 — *"There must not be any PHP or JavaScript errors"* (áp gián tiếp; đây là
+CSS var treo, không phải lỗi PHP — nên đúng hơn thì gọi là lỗi render).
+**Vị trí:** `theme.json:268`, element `button`.
+
+`settings.typography.fontFamilies` chỉ khai 4 slug: `system-sans`, `system-serif`, `system-mono`,
+`inter`. **Không có `display`.** Var không resolve → mọi nút bấm mất font đã định.
+
+Xuất xứ, theo `git log -L`: commit `26d7a8b` *"Set buttons in the display face, as the Store's
+theme does"*. Nhưng theme của Store (`flexa-theme-1`) cũng **không** khai `display` — nó chỉ có
+`inter`.
+
+**Vì sao KHÔNG được xoá dòng đó.** `display` do phía build cấp lúc chạy:
+`GeneratorController::write_global_fonts()` của plugin `flexa-starter` ghi font của template vào
+user Global Styles **origin `custom`, cố ý giữ nguyên slug của template**. Docblock của chính nó:
+
+> *"A prefixed slug would be tidier and would leave every `var(--wp--preset--font-family--display)`
+> in the stylesheet pointing at nothing."*
+
+Nên site do build sinh ra **thật sự có** `display` (origin `custom` thắng origin `theme`). Chỉ bản
+Flexa cài trần từ WP.org là không có. Xoá dòng đó sẽ vá bản trần và làm hỏng bản build.
+
+**✅ ĐÃ SỬA** — thêm fallback, giữ nguyên tham chiếu:
+
+```diff
+-"fontFamily": "var(--wp--preset--font-family--display)",
++"fontFamily": "var(--wp--preset--font-family--display, var(--wp--preset--font-family--system-sans))",
+```
+
+Có `display` thì dùng display; không có thì rơi về `system-sans`. Hai môi trường, một dòng.
+
+**Kiểm chứng.** Rủi ro duy nhất là core có mangle `var()` lồng nhau trong theme.json không — đã
+dựng `WP_Theme_JSON` của WP 7.1 chạy trên chính `theme.json` này, output nguyên văn:
+
+```css
+:root :where(.wp-element-button, .wp-block-button__link){
+  font-family: var(--wp--preset--font-family--display, var(--wp--preset--font-family--system-sans));
+}
+```
+
+An toàn vì `remove_insecure_properties()` chỉ chạy trên origin `custom`, không chạm theme.json.
+
+---
+
+### 13. `primary` / `secondary` / `neutral` vắng mặt ở cả 5 style variation
+
+**Vi phạm:** Mục #4 (cùng loại với #12 — tham chiếu preset trỏ vào chỗ trống).
+**Vị trí:** `styles/*.json` × 5, hệ quả rơi vào `parts/header.html:2` và `parts/footer.html:2`.
+
+1.2.0 thêm `primary`/`secondary`/`neutral` vào `theme.json`, và hai template part dùng
+`var(--wp--preset--color--neutral)` làm màu viền. **Không file variation nào được cập nhật theo.**
+
+Và core **thay thế** nguyên mảng palette chứ không merge từng slug — `WP_Theme_JSON::merge()`,
+comment nguyên văn *"Replace the presets."* (`class-wp-theme-json.php:4387`). Nên bật bất kỳ
+variation nào là `--wp--preset--color--neutral` biến mất → `border-top-color` rỗng → **viền header
+và footer mất sạch trên cả 5 variation**. Tự dựng lại tình huống để chắc chắn:
+
+```
+theme palette có neutral, variation không:
+  :root{--wp--preset--color--base: #111111;--wp--preset--color--accent: #7aa87f;}
+  → neutral biến mất. XÁC NHẬN.
+```
+
+**Phương án đã LOẠI: đổi template part sang `subtle`.** Viền lưu ở hai chỗ — block attribute
+`"color":"var:preset|color|neutral"` và inline `style`. Dạng attribute `var:preset|…` **không mang
+được fallback**, sửa lệch hai bên thì editor re-serialize đè mất ở lần save đầu. Sửa palette mới
+là sửa đúng gốc, và vá luôn `primary`/`secondary` cho mọi markup khác.
+
+**✅ ĐÃ SỬA** — bổ sung 3 slug vào cả 5 variation, giá trị suy ra từ chính quan hệ mà `theme.json`
+đã thiết lập chứ không bịa tông mới:
+
+| slug | quan hệ trong `theme.json` | áp cho variation |
+|---|---|---|
+| `primary` | `#5f7e64` — **trùng khít `accent`** | `= accent` |
+| `secondary` | `#2f3e33` — accent tối đi, cr 11.3 | accent đẩy tối tới cr ≈ 7–11 |
+| `neutral` | `#f1f5f4` — cr 1.1, chỉ làm viền | `= subtle` (vốn đã cr ≈ 1.1) |
+
+| variation | `primary` | `secondary` | `neutral` |
+|---|---|---|---|
+| dark | `#7aa87f` (6.96) | `#bbd3be` (11.85) | `#1e1e1e` (1.13) |
+| dusty-rose | `#a16161` (4.54) | `#7a4848` (7.0) | `#f0e8e8` (1.15) |
+| nordic | `#5b8fa8` (3.36 ⚠️) | `#395a6b` (7.0) | `#eaeff3` (1.1) |
+| primary | `#c0392b` (5.44) | `#9e2f23` (7.28) | `#f4f4f6` (1.1) |
+| sapphire-sun | `#c0392b` (5.44) | `#9e2f23` (7.28) | `#f4f4f4` (1.1) |
+
+Hai chỗ cố ý lệch khỏi công thức:
+
+- **dark**: nền tối nên "đẩy tối" cho ra màu gần trùng accent (6.96 vs 7.16), vô dụng. Lật ngược
+  thành sắc **sáng hơn** `#bbd3be`, giữ đúng độ tương phản 11.85 ≈ 11.3 của bản gốc.
+- **nordic**: `primary = accent = #5b8fa8` chỉ đạt **3.36** trên nền `#f8f9fb`, dưới AA. **Đây là
+  tình trạng có sẵn, không do lần sửa này sinh ra** — `nordic.json` đã đặt link text và chữ trên
+  nút bằng `accent` từ trước. Theme đã bỏ tag `accessibility-ready` nên không phải yêu cầu bắt
+  buộc. **Chưa xử lý, chờ quyết định thẩm mỹ** — nếu muốn vá, đổi accent của nordic sang `#4a7a92`
+  (cr 4.55) là hết.
+
+**Không ảnh hưởng build:** build ghi màu vào origin `custom`, luôn đè lên theme presets. Thêm slug
+ở origin `theme` chỉ vá trường hợp *chưa* có ai đè — tức site cài trần, và site đã build rồi bật
+variation.
+
+**Sửa kèm:** 5 file variation khai `"version": 2` trong khi `theme.json` là `"version": 3` — đã
+đồng bộ về 3. An toàn vì chúng chỉ khai `settings.color.palette`, migration v2→v3 không chạm tới.
+
+**Kiểm chứng.** Chạy `WP_Theme_JSON` của WP 7.1 merge `theme.json` với từng variation:
+
+```
+FIX #1  button font-family fallback emitted : PASS
+
+FIX #2  palette after merging each variation into theme.json:
+  dark.json              PASS   neutral=#1e1e1e
+  dusty-rose.json        PASS   neutral=#f0e8e8
+  nordic.json            PASS   neutral=#eaeff3
+  primary.json           PASS   neutral=#f4f4f6
+  sapphire-sun.json      PASS   neutral=#f4f4f4
+
+>>> ALL CHECKS PASS
+```
+
+---
+
+## Ghi chú vòng 2: preset khai nhưng không ai dùng
+
+Không vi phạm, ghi lại để khỏi rà lại: `system-serif`, `accent-light`, spacing `10`/`30`/`50`/`60`
+và `xxl` hiện không được tham chiếu ở đâu. Riêng font `inter` khai tên nhưng **không bundle
+`fontFace`** — máy không cài Inter sẽ render font khác, hơi lệch với `readme.txt` đang khẳng định
+*"uses the native system font stack"*.
+
+Và hai file CSS tên lệch nhau đúng một ký tự `s`: `assets/css/block-style.css` (cho
+`core/navigation`) vs `assets/css/block-styles.css` (button Outline + separator Wavy).
+
+---
+
 ## Ghi chú thêm: file dev trong thư mục theme
 
 Không phải vi phạm nếu đóng gói bằng `release.sh` (script đã `--exclude` chúng), nhưng cần lưu ý
@@ -742,3 +889,81 @@ Ghi lại để không mất công kiểm tra lại:
 - ✅ Không có upsell / affiliate link ở frontend (mục #13)
 - ✅ Tags trong `style.css` và `readme.txt` khớp nhau và đều hợp lệ
 - ✅ Chỉ dùng một text domain duy nhất (`flexa`) (mục #8)
+
+---
+
+# Rà soát vòng 3 — 2026-08-31
+
+Rà lại toàn bộ theme sau vòng 2. **Không có blocker mới theo nghĩa hẹp của WP.org**, nhưng phát
+hiện 2 lỗi thật mà hai vòng trước bỏ sót, cộng 4 mục nhẹ chưa xử lý. Mục #14 và #15 **đã sửa**;
+#16–#19 ghi lại, chưa sửa.
+
+| # | Mức | Vi phạm | Mục | Trạng thái |
+|---|-----|---------|-----|------------|
+| 14 | 🟠 | `<header>` lồng `<header>`, `<footer>` lồng `<footer>` — HTML không hợp lệ | #3, #11 | **[x] Đã sửa** |
+| 15 | 🟠 | `Requires at least: 6.5` thấp hơn sàn thật (6.8) → mất viền focus trên 6.5–6.7 | #3 | **[x] Đã sửa** |
+| 16 | 🟡 | Font `Inter` khai nhưng không bundle, không ai dùng, mâu thuẫn với `readme.txt` | — | [ ] |
+| 17 | 🟡 | `elements.button` trỏ preset `display` không tồn tại | — | [ ] |
+| 18 | 🟡 | `.DS_Store` đang được git track, `.gitignore` chưa liệt kê | #9 | [ ] |
+| 19 | 🟡 | `release.sh` quên `--exclude='.gitattributes'` | #9 | [ ] |
+
+---
+
+## #14 🟠 Landmark lồng nhau — `<header>` trong `<header>`, `<footer>` trong `<footer>`
+
+**Vi phạm:** mục #11 (block template phải hợp lệ) và mục #3 (accessibility).
+
+Cả 11 template gọi part bằng `wp:template-part {"slug":"header","area":"header","tagName":"header"}`.
+Core render block này ở `wp-includes/blocks/template-part.php:155-162`: có `tagName` thì dùng
+`tagName`, **không có thì rơi về `area_tag` của area** — mà `area_tag` của area `header` vốn đã là
+`header` (`wp-includes/block-template-utils.php:91`). Nghĩa là block này **luôn** nhả `<header>`,
+khai `tagName` hay không cũng vậy.
+
+Bên trong, `parts/header.html` lại mở group `{"tagName":"header"}`. HTML ra lò:
+
+```html
+<header class="wp-block-template-part">
+  <header class="wp-block-group has-base-background-color">…</header>
+</header>
+```
+
+Content model của HTML nói rõ: `header` là flow content **nhưng không được có `header` hoặc `footer`
+làm hậu duệ**. Validator W3C báo *error*, không phải warning. Kèm theo là hai landmark `banner` và
+hai `contentinfo` mỗi trang, screen reader đọc trùng. `parts/footer.html` dính y hệt.
+
+**✅ ĐÃ SỬA** — bỏ `tagName` ở group ngoài cùng của `parts/header.html` và `parts/footer.html`, đổi
+cặp thẻ tương ứng thành `<div>`. Thẻ semantic vẫn còn, do chính `area_tag` sinh ra. Sửa 2 file thay
+vì 11, và **không** đụng vào template — nếu sửa ở template thì `area_tag` vẫn kéo `<header>` về,
+tức là sửa mà không hết.
+
+---
+
+## #15 🟠 `Requires at least` khai thấp hơn sàn thật
+
+**Vi phạm:** mục #3 (Keyboard navigation) trên đúng khoảng phiên bản mà theme tự nhận là hỗ trợ.
+
+Hai thứ độc lập đẩy sàn lên, tra `@since` trong core WP 7.1:
+
+**(a) `"version": 3` → cần 6.6.** `class-wp-theme-json.php:1074` — *"@since 6.6.0 Changed value
+from 2 to 3"*. Trước 6.6 `LATEST_SCHEMA` là 2, `migrate_v2_to_v3()` chưa tồn tại, nên hai khoá v3
+duy nhất đang dùng (`defaultFontSizes: false`, `defaultSpacingSizes: false`) là setting lạ và bị
+sanitize bỏ. *Chưa chạy thử trên 6.5 — máy chỉ có 7.1 — nên không khẳng định hậu quả render.*
+
+**(b) `:focus-visible` trong `styles.elements` → cần 6.8.** ← nặng hơn hẳn
+`class-wp-theme-json.php:649` — *"@since 6.8.0 Added support for ':focus-visible'"*. Trước 6.8,
+`:focus-visible` không nằm trong `VALID_ELEMENT_PSEUDO_SELECTORS`, nên hai khối `elements.link`
+và `elements.button` trong `theme.json` **bị vứt im lặng** — không lỗi, không cảnh báo, chỉ là CSS
+không bao giờ được sinh.
+
+Hậu quả trên 6.5 / 6.6 / 6.7: link và button **không còn viền focus nào**. `style.css` không đỡ
+được, vì phần cuối file cố ý chỉ đặt mỗi `outline-offset` cho `a:focus-visible` và
+`.wp-element-button:focus-visible`, để màu và độ dày cho `theme.json` quyết (xem comment tại chỗ).
+Không có outline thì offset vô nghĩa. Tức là **mục #3 chỉ thật sự đóng từ WP 6.8 trở lên.**
+
+**✅ ĐÃ SỬA** — `Requires at least` đổi `6.5` → `6.8` ở cả `style.css` và `readme.txt`.
+
+**Phương án đã LOẠI: giữ sàn 6.5.** Muốn giữ thì phải chuyển màu + độ dày outline từ `theme.json`
+xuống `style.css` và hạ `theme.json` về `"version": 2`. Nhiều việc hơn, và mất luôn cái lợi mà
+vòng 2 vừa xây: style variation đổi `accent` thì viền focus đổi theo.
+
+**Không bump version theme; `readme.txt` và `style.css` giữ nguyên `1.2.0`.**

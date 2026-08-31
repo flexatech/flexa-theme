@@ -60,6 +60,15 @@ msgstr ""
 msgid "The page you're looking for couldn't be found. Try searching, or head back to the homepage."
 msgstr ""
 
+#: patterns/404-content.php:20
+#: patterns/search-content.php:31
+msgid "Search"
+msgstr ""
+
+#: patterns/404-content.php:26
+msgid "Go to homepage"
+msgstr ""
+
 #: patterns/page-comments.php
 msgctxt "Pattern title"
 msgid "Page Comments"
@@ -96,6 +105,10 @@ msgstr ""
 
 #: patterns/search-content.php:24
 msgid "No results found. Try a different search term."
+msgstr ""
+
+#: patterns/search-content.php:31
+msgid "Search again"
 msgstr ""
 
 #: patterns/single-author-bio.php
