@@ -251,7 +251,7 @@
                         "textDecoration": "underline"
                     }
                 },
-                ":focus": {
+                ":focus-visible": {
                     "outline": {
                         "color": "var(--wp--preset--color--accent)",
                         "style": "solid",
@@ -276,7 +276,7 @@
                         "text": "var(--wp--preset--color--base)"
                     }
                 },
-                ":focus": {
+                ":focus-visible": {
                     "outline": {
                         "color": "var(--wp--preset--color--accent)",
                         "style": "solid",
