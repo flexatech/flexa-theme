@@ -204,7 +204,8 @@ button {
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.wp-block-post-terms a:hover {
+.wp-block-post-terms a:hover,
+.wp-block-post-terms a:focus-visible {
     background-color: var(--wp--preset--color--contrast);
     color: var(--wp--preset--color--base);
 }
@@ -250,6 +251,51 @@ button {
 .post-card .wp-block-post-featured-image:not(:has(img)) a,
 .post-card .wp-block-post-featured-image:not(:has(img)) svg {
     display: none;
+}
+
+
+/* ============================================================
+   Accessibility: Keyboard Focus
+
+   theme.json already gives links and .wp-element-button a 2px accent
+   outline on :focus. These rules cover what an element selector cannot
+   reach, and add the offset theme.json does not set.
+
+   :focus-visible, so the ring appears for keyboard navigation and not on
+   a mouse click. Browsers that do not know the selector drop these rules
+   and still fall back to the theme.json :focus outline underneath.
+============================================================ */
+
+/* Form fields. Nothing in this theme styles their focus, so until now they
+   relied on whatever ring the browser happened to draw over our own
+   backgrounds. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--wp--preset--color--accent, currentColor);
+    outline-offset: 2px;
+}
+
+/* Navigation controls: the hamburger, the overlay's close button and the
+   submenu arrows. All three are <button>, none of them carry
+   .wp-element-button, so theme.json's button element never reaches them -
+   and the guidelines name navigation menus first.
+
+   currentColor rather than the accent: the overlay inverts the palette
+   (overlayBackgroundColor is contrast), where a green ring would sink into
+   the dark ground. currentColor follows the text either way. */
+.wp-block-navigation__responsive-container-open:focus-visible,
+.wp-block-navigation__responsive-container-close:focus-visible,
+.wp-block-navigation-submenu__toggle:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+/* Offset only. Colour and width stay in theme.json, so a style variation
+   that changes the accent still changes the ring. */
+a:focus-visible,
+.wp-element-button:focus-visible {
+    outline-offset: 2px;
 }
 
 

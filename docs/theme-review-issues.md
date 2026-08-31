@@ -4,7 +4,11 @@
 Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 
 > Quy định ghi rõ: *"Themes that have 3 or more distinct issues may be closed as not-approved."*
-> Theme hiện có **3 lỗi blocker + 4 lỗi nên sửa + 3 lỗi nhẹ** → sẽ bị đóng ticket ở trạng thái hiện tại.
+>
+> Rà soát ban đầu: **3 blocker + 4 nên sửa + 3 nhẹ**. Sau khi soi kỹ, mục #3 được hạ từ 🔴 xuống 🟠
+> (xem phần đính chính trong mục đó) → còn **2 blocker + 5 nên sửa + 3 nhẹ**.
+>
+> **Đã xử lý: #1, #2, #3.** Còn lại 5 mục.
 
 ---
 
@@ -14,7 +18,7 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 |---|-----|---------|-----|------------|
 | 1 | 🔴 Blocker | Shortcode `[flexa_primary_menu]` trong template part (chưa đăng ký) | #5 | **[x] Đã sửa** |
 | 2 | 🔴 Blocker | Line-ending lẫn lộn CRLF + LF (11 file CRLF) | #9 | **[x] Đã sửa** |
-| 3 | 🔴 Blocker | Không có style `:focus` cho điều hướng bàn phím | #3 | [ ] |
+| 3 | 🟠 Nên sửa | Thiếu `:focus` cho ô form + điều khiển navigation | #3 | **[x] Đã sửa** |
 | 4 | 🟠 Nên sửa | Copyright tác giả theme hiển thị ở frontend | #1 | [ ] |
 | 5 | 🟠 Nên sửa | CSS rò rỉ sang wp-admin (enqueue sai hook) | #12 | [ ] |
 | 6 | 🟠 Nên sửa | `remove_theme_support( 'core-block-patterns' )` | #5 | [ ] |
@@ -155,39 +159,72 @@ Quét byte-level toàn thư mục (kể cả file chưa track): 48/48 file text 
 
 ---
 
-### 3. Không có style `:focus` cho điều hướng bàn phím
+### 3. Thiếu `:focus` cho ô form + điều khiển navigation
 
 **Vi phạm:** Mục #3 — *"Theme authors must provide visual keyboard focus highlighting in navigation
 menus and for form fields, submit buttons, and text links."*
 
-**Hiện trạng:** Grep `focus` trong `style.css` + `assets/css/*.css` chỉ ra **đúng 1 kết quả**
-(`assets/css/block-styles.css:11`, dành cho nút outline).
+> **⚠️ Đính chính:** bản đầu của tài liệu này ghi *"không có `:focus` cho link / menu / form / nút
+> submit"* và xếp 🔴 Blocker. **Nói quá.** Kết luận đó dựa trên việc chỉ grep `style.css` +
+> `assets/css/*.css` — **bỏ sót `theme.json`**, nơi đã khai sẵn:
+>
+> ```jsonc
+> "elements": {
+>   "link":   { ":focus": { "outline": { "color": "…accent", "style": "solid", "width": "2px" } } },
+>   "button": { ":focus": { "outline": { "color": "…accent", "style": "solid", "width": "2px" } } }
+> }
+> ```
+>
+> Và core hỗ trợ thật, không phải khai chết: `class-wp-theme-json.php:299-302` map
+> `outline-color/offset/style/width`, còn `VALID_ELEMENT_PSEUDO_SELECTORS` cho phép `:focus` và
+> `:focus-visible` trên cả `link` lẫn `button`.
+>
+> Phần reset trong `style.css` cũng **không** có `outline: none` ở đâu, nên focus ring mặc định của
+> trình duyệt còn nguyên. Vì vậy hạ xuống 🟠.
 
-Không có `:focus` / `:focus-visible` cho:
+**Thực trạng đúng trước khi sửa:**
 
-- link văn bản
-- menu điều hướng
-- ô nhập form
-- nút submit
+| Phần tử | Trạng thái |
+|---|---|
+| Link văn bản (`a`) | ✅ theme.json |
+| Nút block (`.wp-element-button`) | ✅ theme.json |
+| Nút submit search / comment form | ✅ core gắn `wp-element-button` → ăn theo |
+| Nút style outline | ✅ `assets/css/block-styles.css:11` |
+| Skip link | ✅ core tự lo |
+| **Ô form** (`input`, `select`, `textarea`) | ❌ chỉ còn ring mặc định của trình duyệt |
+| **Nút mở/đóng overlay menu, submenu toggle** | ❌ là `<button>` nhưng không mang `.wp-element-button` |
+| `outline-offset` | ❌ không set → viền dính sát chữ |
 
-Ngược lại có nhiều rule `:hover` **không kèm** `:focus` tương ứng — ví dụ
-`style.css:207` (`.wp-block-post-terms a:hover`). Đây chính xác là kiểu lỗi reviewer bắt.
+**✅ ĐÃ SỬA** — thêm một khối vào `style.css`, **không đụng `theme.json`** (phần đang chạy đúng thì
+để yên, và `:focus` ở đó còn làm lớp fallback):
 
-**Cách sửa:** thêm vào `style.css` một style focus rõ ràng, dùng `:focus-visible`, và bổ sung
-`:focus-visible` vào mọi rule `:hover` hiện có của link/nút. Ví dụ:
+1. `input / select / textarea:focus-visible` → outline 2px accent + offset 2px
+2. `.wp-block-navigation__responsive-container-open / -close`,
+   `.wp-block-navigation-submenu__toggle` → outline 2px **`currentColor`**, không dùng accent, vì
+   overlay đảo màu nền (`overlayBackgroundColor: contrast`) sẽ làm viền xanh chìm vào nền tối
+3. `a` + `.wp-element-button` → chỉ thêm `outline-offset`; màu và độ dày vẫn ở `theme.json` để style
+   variation đổi accent thì viền đổi theo
+4. `style.css:207` — thêm `:focus-visible` vào cạnh `.wp-block-post-terms a:hover` (hover mà không
+   kèm focus chính là pattern reviewer soi)
 
-```css
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-.wp-block-navigation a:focus-visible,
-.wp-block-button__link:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 2px;
-}
-```
+Dùng `:focus-visible` để viền chỉ hiện khi đi bằng bàn phím, không hiện khi bấm chuột. Trình duyệt
+cũ không hiểu selector thì bỏ qua rule và vẫn còn `:focus` của `theme.json` đỡ bên dưới — không có
+kịch bản nào mất hoàn toàn focus indicator.
+
+**Contrast viền so với nền (WCAG 1.4.11 yêu cầu ≥ 3:1)** — đã tính trên cả 6 bảng màu:
+
+| Bảng màu | accent | base | Tỉ lệ | |
+|---|---|---|---|---|
+| theme.json | `#5f7e64` | `#ffffff` | 4.51 | ✅ |
+| dark | `#7aa87f` | `#111111` | 6.96 | ✅ |
+| dusty-rose | `#a16161` | `#fdf8f7` | 4.54 | ✅ |
+| nordic | `#5b8fa8` | `#f8f9fb` | 3.36 | ✅ (sát nhất) |
+| primary | `#c0392b` | `#ffffff` | 5.44 | ✅ |
+| sapphire-sun | `#c0392b` | `#ffffff` | 5.44 | ✅ |
+
+**Còn phải test tay:** Tab qua toàn trang (site title → menu → hamburger ở viewport nhỏ → submenu →
+search field → search button → nội dung → comment form → submit) phải thấy viền ở mọi điểm dừng; bấm
+chuột vào cùng những chỗ đó thì **không** được hiện viền.
 
 ---
 
