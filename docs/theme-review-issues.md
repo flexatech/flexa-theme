@@ -8,7 +8,9 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 > Rà soát ban đầu: **3 blocker + 4 nên sửa + 3 nhẹ**. Sau khi soi kỹ: #3 hạ 🔴→🟠, #6 hạ 🟠→🟡, và
 > **#11 được phát hiện thêm** trong lúc sửa #4 → tổng **2 blocker + 5 nên sửa + 4 nhẹ**.
 >
-> **Đã xử lý: #1, #2, #3, #4, #5, #6, #7, #8.** Còn lại 3 mục: #9, #10, #11.
+> **✅ HOÀN TẤT.** Đã sửa #1–#8, #10, #11. Mục **#9 bỏ qua có chủ đích** (xem lý do trong mục đó).
+>
+> Còn 3 việc phải làm tay, không kiểm chứng được từ phía code — xem **"Việc còn lại"** ở cuối file.
 >
 > ⚠️ Ba mục từng bị trích sai điều khoản, đã đính chính tại chỗ: **#3** (bỏ sót `theme.json`),
 > **#5** (mục #12 không áp), **#6** (theme-support flag không phải hook).
@@ -27,9 +29,9 @@ Phiên bản kiểm tra: **1.2.0** · Ngày rà soát: **2026-08-31**
 | 6 | 🟡 Nhẹ | `remove_theme_support( 'core-block-patterns' )` | — | **[x] Đã sửa** |
 | 7 | 🟠 Nên sửa | Nguy cơ fatal error khi thiếu ext-dom (code chết) | #4 | **[x] Đã sửa** |
 | 8 | 🟠 Nên sửa | File `.pot` khai GPLv3 **và thiếu 14 chuỗi** | #1, #8 | **[x] Đã sửa** |
-| 9 | 🟡 Nhẹ | Slug / text-domain / tên thư mục không khớp | #8 | [ ] |
+| 9 | ⬜ Bỏ qua | Slug / text-domain / tên thư mục không khớp | #8 | **Có chủ đích** |
 | 10 | 🟡 Nhẹ | Trùng tên block style `outline` với core | — | **[x] Đã sửa** |
-| 11 | 🟠 Nên sửa | Preset `muted` fail contrast trên `nordic.json` (3.19) | #3 | [ ] |
+| 11 | 🟠 Nên sửa | Preset `muted` fail contrast trên `nordic.json` (3.19) | #3 | **[x] Đã sửa** |
 
 ---
 
@@ -559,10 +561,44 @@ thêm style variation, thêm custom template, hoặc bump version.
 | Text Domain (`style.css`) | `flexa` |
 | `SLUG` trong `release.sh` | `flexa` |
 
-Zip build ra đúng (`flexa/`), nhưng thư mục làm việc thì lệch — dễ gây nhầm khi test hoặc khi
-ai đó zip thủ công.
+**⬜ QUYẾT ĐỊNH: BỎ QUA CÓ CHỦ ĐÍCH — không phải sót.**
 
-**Cách sửa:** đổi tên thư mục local thành `flexa`.
+**WP.org không bao giờ nhìn thấy thư mục này.** Thứ nộp lên là file zip, và `release.sh` đã ép đúng:
+
+```bash
+SLUG="flexa"                                          # :13
+BUILD_DIR="${DIST_DIR}/${SLUG}"                       # :16  → dist/flexa/
+( cd "${DIST_DIR}" && zip -rq "${ZIP_FILE}" "${SLUG}" )  # :49
+```
+
+Trong artifact thật: thư mục `flexa/` = Text Domain `flexa` = slug từ Theme Name "Flexa". Khớp hoàn
+toàn. Tên thư mục làm việc `flexa-theme` là chi tiết môi trường dev, không đi theo zip.
+
+**Và có lý do thật để KHÔNG đổi.** Site local có child theme phụ thuộc trực tiếp vào tên thư mục:
+
+```
+themes/flexa-theme-child/style.css
+  Template: flexa-theme        ← trỏ thẳng vào tên thư mục cha
+```
+
+Child theme này **đang active**. Đổi tên thư mục cha sẽ làm WordPress mất theme cha → site vỡ, phải
+sửa `Template:` của child, và các `wp_theme` taxonomy term mà flexa-starter ghi vào `wp_template_part`
+cũng gắn theo `get_stylesheet()`. Đổi tên để chữa thứ không ảnh hưởng bản nộp, mà làm hỏng môi
+trường dev — lỗ vốn.
+
+### Hai điều kiện để việc bỏ qua này an toàn
+
+1. **Đóng gói bằng `release.sh`, tuyệt đối không zip tay thư mục.** Right-click → Compress sẽ cho
+   folder `flexa-theme` và mismatch xuất hiện thật.
+
+2. **Nhớ `--headers` mỗi lần chạy `make-pot`.** Đây là chi phí thật của việc bỏ qua — `make-pot` suy
+   slug từ tên thư mục nên tự ghi `.../theme/flexa-theme`. Xem lệnh đầy đủ ở mục #8.
+
+### Rủi ro nằm ngoài tầm
+
+Slug `flexa` do WordPress.org cấp theo Theme Name lúc duyệt. Nếu `flexa` **đã có người lấy**, họ cấp
+slug khác — lúc đó `SLUG` trong `release.sh` và `Text Domain` trong `style.css` phải đổi theo.
+**Kiểm tra `wordpress.org/themes/flexa/` trước khi nộp.**
 
 ---
 
@@ -618,18 +654,41 @@ Phát hiện khi tính contrast cho mục #4. Không phải màu trang trí — 
 | primary | `#6c6c80` | `#ffffff` | 5.13 | ✅ |
 | sapphire-sun | `#323232` | `#ffffff` | 12.82 | ✅ |
 
-**Cách sửa:** làm tối `muted` của nordic lại, giữ nguyên sắc xanh xám của bảng màu. Đã tính sẵn vài
-ứng viên trên nền `#f8f9fb`:
+**✅ ĐÃ SỬA** — `#7a8f9e` → **`#566976`**.
 
-| Màu | Tỉ lệ | |
-|---|---|---|
-| `#7a8f9e` (hiện tại) | 3.19 | ❌ |
-| `#647889` | 4.34 | ❌ vẫn thiếu |
-| `#5f7181` | 4.79 | ✅ |
-| `#5c6e7d` | 5.01 | ✅ có biên an toàn hơn |
+Cách chọn: chuyển `#7a8f9e` sang HSL được **H=205° S=15.7% L=54.9%**, rồi **giữ nguyên H và S**, chỉ
+hạ L xuống 40%. Nên màu mới vẫn đúng sắc xanh xám của bảng Nordic, chỉ đậm hơn.
 
-Đề xuất `#5f7181`. Cần xem mắt thường trên `nordic` trước khi chốt — con số đạt không có nghĩa là
-nhìn vẫn còn ra chất "muted".
+| Màu | L% | vs base | vs subtle | vs accent-light |
+|---|---|---|---|---|
+| `#7a8f9e` (cũ) | 55 | 3.19 ❌ | 2.90 ❌ | 2.74 ❌ |
+| `#5a6e7c` | 42 | 5.04 ✅ | 4.59 ✅ | 4.32 ❌ |
+| **`#566976`** | **40** | **5.42 ✅** | **4.93 ✅** | **4.65 ✅** |
+
+Chọn `#566976` thay vì `#5f7181` (ứng viên trong bản ghi trước, 4.79 trên `base`) vì nó là mức đầu
+tiên vượt ngưỡng trên **cả ba** nền, không chỉ nền chính.
+
+### Audit đầy đủ `muted` × mọi nền, sau khi sửa
+
+| Variation | muted | vs base | vs subtle | vs accent-light |
+|---|---|---|---|---|
+| theme.json | `#707070` | 4.95 ✅ | 4.54 ✅ | 4.26 ⚠️ |
+| dark | `#9a9a9a` | 6.71 ✅ | 5.92 ✅ | 5.09 ✅ |
+| dusty-rose | `#7c6464` | 5.16 ✅ | 4.51 ✅ | 4.38 ⚠️ |
+| **nordic** | **`#566976`** | **5.42 ✅** | **4.93 ✅** | **4.65 ✅** |
+| primary | `#6c6c80` | 5.13 ✅ | 4.67 ✅ | 3.95 ⚠️ |
+| sapphire-sun | `#323232` | 12.82 ✅ | 11.66 ✅ | 11.40 ✅ |
+
+**Ba ô ⚠️ không sửa, có chủ đích.** `accent-light` **không được dùng làm nền ở bất kỳ đâu** trong
+theme — grep toàn bộ `style.css`, `assets/css/`, `patterns/`, `parts/`, `templates/` không ra kết quả
+nào; nó chỉ tồn tại trong palette để người dùng tự chọn. Còn `muted` thì chỉ xuất hiện ở
+`style.css:185` (`.post-meta`) và `patterns/single-post-header.php:10` — cả hai đều nằm trên nền
+`base`.
+
+Nên đó là tổ hợp theme không bao giờ tự tạo ra. Đổi màu để chữa một cặp chỉ xuất hiện khi người dùng
+tự ghép tay là churn, không phải sửa lỗi.
+
+---
 
 ---
 
@@ -642,6 +701,28 @@ nếu zip thủ công. Các file/thư mục sau **không được có** trong zi
 - `.gitignore`
 - `release.sh`
 - `docs/` ← *bao gồm chính file này*
+
+---
+
+## Việc còn lại — phải làm tay, không kiểm chứng được từ code
+
+Ba thứ này **chưa ai xác nhận**. Đừng nộp trước khi xong.
+
+**1. Chạy `release.sh` và soi zip thật.** Máy làm việc thiếu `rsync` và `zip` nên script chưa từng
+chạy. Cần kiểm tra trong zip: line-ending toàn LF (mục #2), thư mục top-level là `flexa/` (mục #9),
+và không có `.DS_Store` / `.gitignore` / `release.sh` / `docs/` lọt vào.
+
+**2. Test focus bằng bàn phím trên trình duyệt** (mục #3). Tab qua toàn trang — site title → menu →
+hamburger ở viewport nhỏ → submenu → search field → search button → nội dung → comment form → submit.
+Mọi điểm dừng phải thấy viền. Bấm chuột vào cùng những chỗ đó thì **không** được hiện viền. Nhớ test
+riêng overlay menu ở mobile, nơi nền đảo màu.
+
+**3. Kiểm tra `wordpress.org/themes/flexa/` còn trống không** (mục #9). Nếu slug đã có người lấy thì
+`SLUG` trong `release.sh` và `Text Domain` trong `style.css` phải đổi theo.
+
+Ngoài ra, nên mở editor xác nhận: inserter có cả pattern core lẫn nhóm Flexa (mục #6), nút Outline và
+separator Wavy hiển thị đúng trong canvas (mục #5), và trang wp-admin không còn tải
+`flexa-block-styles` (mục #5 — đã kiểm qua `wp-login.php` nhưng chưa kiểm khi đã đăng nhập).
 
 ---
 
