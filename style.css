@@ -67,8 +67,26 @@ h6 {
     overflow-wrap: break-word;
 }
 
+/* text-wrap-style, not the `text-wrap` shorthand.
+
+   `text-wrap: pretty` expands to text-wrap-style: pretty PLUS text-wrap-mode:
+   wrap - and that second half is the shorthand's initial value, written whether
+   it was wanted or not. text-wrap-mode is what `white-space: nowrap` sets, so a
+   paragraph inside a nowrap container inherited nowrap and then had it
+   overwritten here by a rule that only meant to change how lines are balanced.
+
+   Measured on a "Save $13" badge: the container held white-space: nowrap, the
+   <p> inside computed text-wrap-mode: wrap, and eight characters broke across
+   two lines - 45.6px tall against the 28.8px it is on the Store, whose own
+   theme scopes its pretty/balance rules to long-form text instead of to every
+   p and heading on the page.
+
+   The longhand says the one thing intended and leaves inherited wrapping alone.
+   A browser that does not know it drops the line: no balancing, and no
+   nowrap broken either. */
+
 p {
-    text-wrap: pretty;
+    text-wrap-style: pretty;
 }
 
 h1,
@@ -77,7 +95,7 @@ h3,
 h4,
 h5,
 h6 {
-    text-wrap: balance;
+    text-wrap-style: balance;
 }
 
 button {
