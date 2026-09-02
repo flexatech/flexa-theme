@@ -35,6 +35,7 @@ mkdir -p "${BUILD_DIR}"
 rsync -a --delete \
 	--exclude='.git' \
 	--exclude='.gitignore' \
+	--exclude='.gitattributes' \
 	--exclude='.svn' \
 	--exclude='.claude' \
 	--exclude='.DS_Store' \
