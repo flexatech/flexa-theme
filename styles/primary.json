@@ -1,6 +1,6 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/theme.json",
-	"version": 2,
+	"version": 3,
 	"title": "Primary",
 	"settings": {
 		"color": {
@@ -14,6 +14,21 @@
 					"name": "Contrast",
 					"slug": "contrast",
 					"color": "#1a1a2e"
+				},
+				{
+					"name": "Primary",
+					"slug": "primary",
+					"color": "#c0392b"
+				},
+				{
+					"name": "Secondary",
+					"slug": "secondary",
+					"color": "#9e2f23"
+				},
+				{
+					"name": "Neutral",
+					"slug": "neutral",
+					"color": "#f4f4f6"
 				},
 				{
 					"name": "Accent",

@@ -14,10 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Array of files to include
  */
 $flexa_includes = array(
-	'inc/setup.php',              // Theme setup and basic stylesheet enqueue
-	'inc/block-styles.php',       // Block styles registration and enqueues
-	'inc/patterns.php',           // Block patterns registration
-	'inc/template-functions.php', // Additional filters and accessibility fixes
+	'inc/setup.php',        // Theme setup and basic stylesheet enqueue
+	'inc/block-styles.php', // Block styles registration and enqueues
+	'inc/patterns.php',     // Block patterns registration
 );
 
 /**

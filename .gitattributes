@@ -1,0 +1,32 @@
+# Line endings.
+#
+# WordPress.org publishes themes over SVN, and a package that mixes DOS and UNIX
+# line endings can fail to upload with no useful error. Every text file in this
+# theme is therefore normalised to LF, in the repository AND in the working tree.
+#
+# This lives here rather than in core.autocrlf on purpose: core.autocrlf is
+# per-machine config that no clone inherits, so it makes the shipped zip depend on
+# whose machine built it. `eol=lf` overrides core.autocrlf, so the result is the
+# same on Windows, macOS, Linux and CI.
+#
+# release.sh rsyncs the WORKING TREE into the zip, so the working tree is what
+# actually ships - which is why eol=lf matters here and not just text=auto.
+* text=auto eol=lf
+
+# Binary: never touch these bytes.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.mo binary
+
+# Executable shell script: a stray CR after the shebang makes the kernel look for
+# an interpreter whose name ends in \r ("bad interpreter"). Pinned explicitly.
+*.sh text eol=lf

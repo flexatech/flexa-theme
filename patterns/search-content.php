@@ -28,7 +28,7 @@
 			<div style="height:var(--wp--preset--spacing--s)" aria-hidden="true" class="wp-block-spacer"></div>
 			<!-- /wp:spacer -->
 
-			<!-- wp:search {"label":"Search again","showLabel":false,"buttonText":"Search"} /-->
+			<!-- wp:search {"label":"<?php esc_attr_e( 'Search again', 'flexa' ); ?>","showLabel":false,"buttonText":"<?php esc_attr_e( 'Search', 'flexa' ); ?>"} /-->
 		<!-- /wp:query-no-results -->
 
 	</div>

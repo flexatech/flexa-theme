@@ -7,7 +7,7 @@ Author URI:        https://profiles.wordpress.org/flexatech/
 Tags:              blog, one-column, block-patterns, full-site-editing, block-styles, editor-style, style-variations, custom-colors, featured-images, translation-ready
 Text Domain:       flexa
 Domain Path:       /languages
-Requires at least: 6.5
+Requires at least: 6.8
 Tested up to:      7.0
 Requires PHP:      7.4
 License: GNU General Public License v2 or later
@@ -67,8 +67,26 @@ h6 {
     overflow-wrap: break-word;
 }
 
+/* text-wrap-style, not the `text-wrap` shorthand.
+
+   `text-wrap: pretty` expands to text-wrap-style: pretty PLUS text-wrap-mode:
+   wrap - and that second half is the shorthand's initial value, written whether
+   it was wanted or not. text-wrap-mode is what `white-space: nowrap` sets, so a
+   paragraph inside a nowrap container inherited nowrap and then had it
+   overwritten here by a rule that only meant to change how lines are balanced.
+
+   Measured on a "Save $13" badge: the container held white-space: nowrap, the
+   <p> inside computed text-wrap-mode: wrap, and eight characters broke across
+   two lines - 45.6px tall against the 28.8px it is on the Store, whose own
+   theme scopes its pretty/balance rules to long-form text instead of to every
+   p and heading on the page.
+
+   The longhand says the one thing intended and leaves inherited wrapping alone.
+   A browser that does not know it drops the line: no balancing, and no
+   nowrap broken either. */
+
 p {
-    text-wrap: pretty;
+    text-wrap-style: pretty;
 }
 
 h1,
@@ -77,7 +95,7 @@ h3,
 h4,
 h5,
 h6 {
-    text-wrap: balance;
+    text-wrap-style: balance;
 }
 
 button {
@@ -204,7 +222,8 @@ button {
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.wp-block-post-terms a:hover {
+.wp-block-post-terms a:hover,
+.wp-block-post-terms a:focus-visible {
     background-color: var(--wp--preset--color--contrast);
     color: var(--wp--preset--color--base);
 }
@@ -250,6 +269,88 @@ button {
 .post-card .wp-block-post-featured-image:not(:has(img)) a,
 .post-card .wp-block-post-featured-image:not(:has(img)) svg {
     display: none;
+}
+
+
+/* ============================================================
+   Accessibility: Keyboard Focus
+
+   theme.json gives links and .wp-element-button a 2px accent outline on
+   :focus-visible. These rules cover what an element selector cannot reach
+   - form fields and the navigation's own buttons - and add the offset
+   theme.json does not set.
+
+   :focus-visible everywhere, so the ring appears for keyboard navigation
+   and not on a mouse click. It used to be :focus in theme.json, which
+   matches a click too and left a box drawn around whatever was last
+   pressed until something else was.
+
+   That change cost the fallback this block used to lean on, so the block
+   carries its own now: see the @supports at the end. The guidelines ask
+   for visible keyboard focus on menus, form fields, submit buttons and
+   text links, and a browser that has never heard of :focus-visible has to
+   get one too.
+============================================================ */
+
+/* Form fields. Nothing in this theme styles their focus, so until now they
+   relied on whatever ring the browser happened to draw over our own
+   backgrounds. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--wp--preset--color--accent, currentColor);
+    outline-offset: 2px;
+}
+
+/* Navigation controls: the hamburger, the overlay's close button and the
+   submenu arrows. All three are <button>, none of them carry
+   .wp-element-button, so theme.json's button element never reaches them -
+   and the guidelines name navigation menus first.
+
+   currentColor rather than the accent: the overlay inverts the palette
+   (overlayBackgroundColor is contrast), where a green ring would sink into
+   the dark ground. currentColor follows the text either way. */
+.wp-block-navigation__responsive-container-open:focus-visible,
+.wp-block-navigation__responsive-container-close:focus-visible,
+.wp-block-navigation-submenu__toggle:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+/* Offset only. Colour and width stay in theme.json, so a style variation
+   that changes the accent still changes the ring. */
+a:focus-visible,
+.wp-element-button:focus-visible {
+    outline-offset: 2px;
+}
+
+/* THE FALLBACK, for browsers with no :focus-visible.
+
+   Every rule above is inert there, and so is theme.json's - so without
+   this, those browsers get no ring at all on any of it. :focus is the
+   older behaviour: a ring on click as well, which is worse than the
+   modern result and much better than nothing.
+
+   `selector()` is itself newer than :focus-visible, so a browser that
+   understands neither drops the whole @supports block and keeps the
+   plain :focus ring its own UA stylesheet draws. */
+@supports not selector(:focus-visible) {
+
+    a:focus,
+    .wp-element-button:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: 2px solid var(--wp--preset--color--accent, currentColor);
+        outline-offset: 2px;
+    }
+
+    .wp-block-navigation__responsive-container-open:focus,
+    .wp-block-navigation__responsive-container-close:focus,
+    .wp-block-navigation-submenu__toggle:focus {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+    }
 }
 
 

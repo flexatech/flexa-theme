@@ -22,18 +22,35 @@ function flexa_setup() {
 		'gallery', 'caption', 'style', 'script', 'navigation-widgets',
 	) );
 	add_theme_support( 'responsive-embeds' );
-	remove_theme_support( 'core-block-patterns' );
-	add_editor_style( array( 'style.css', 'assets/css/editor-style.css' ) );
+
+	/*
+	 * Editor styles load INSIDE the editor's iframe, which is the only way rules reach the canvas.
+	 * block-styles.css is in this list for that reason: it used to arrive in wp-admin by accident,
+	 * through a stylesheet enqueued on `init` (see inc/block-styles.php), and even then it never
+	 * reached the canvas because print_admin_styles() writes to the parent document, not the frame.
+	 * So the button Outline and separator Wavy styles were missing from the editor the whole time.
+	 */
+	add_editor_style(
+		array(
+			'style.css',
+			'assets/css/editor-style.css',
+			'assets/css/block-styles.css',
+		)
+	);
 
 	/*
 	 * Classic menu locations.
 	 *
-	 * A block theme renders its own navigation through core/navigation, so these are not used by
-	 * any template file here. They exist because a generated header may be a plain markup part
-	 * that pulls the menu with wp_nav_menu( 'primary' ) instead of a navigation block - and
-	 * wp_nav_menu() returns nothing for a location the theme never registered, no matter that a
-	 * menu is assigned to it in theme mods. Registering them also brings back the Appearance ->
-	 * Menus screen, which is where that menu is edited afterwards.
+	 * Both header parts render core/navigation, so nothing here calls wp_nav_menu(). These are
+	 * still registered for two reasons.
+	 *
+	 * First, core reads them. A core/navigation block with no menu of its own falls back through
+	 * WP_Navigation_Fallback, and its first stop is the classic menu assigned to the "primary"
+	 * location - so registering the location is what lets a site that manages its menu in
+	 * Appearance -> Menus see that menu in the header at all.
+	 *
+	 * Second, registering is what puts the Appearance -> Menus screen back and gives the location
+	 * a checkbox there. Without it a menu can be assigned in theme mods but never edited by hand.
 	 */
 	register_nav_menus(
 		array(
