@@ -1,0 +1,109 @@
+/**
+ * Flexa plugins screen (Appearance -> Flexa Plugins).
+ *
+ * Loaded only on that screen, see inc/plugin-installer/assets.php.
+ */
+
+.flexa-pi-grid {
+	display: grid;
+	grid-template-columns: repeat( auto-fill, minmax( 300px, 1fr ) );
+	gap: 16px;
+	margin-top: 20px;
+}
+
+.flexa-pi-card {
+	display: flex;
+	flex-direction: column;
+	padding: 16px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+}
+
+.flexa-pi-head {
+	display: flex;
+	gap: 12px;
+	align-items: flex-start;
+}
+
+.flexa-pi-icon,
+.flexa-pi-icon-empty {
+	flex: 0 0 56px;
+	width: 56px;
+	height: 56px;
+	background: #f0f0f1;
+	border-radius: 4px;
+}
+
+.flexa-pi-icon {
+	object-fit: contain;
+}
+
+.flexa-pi-icon-empty {
+	display: block;
+}
+
+.flexa-pi-title {
+	margin: 0 0 4px;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.flexa-pi-version {
+	display: block;
+	color: #646970;
+	font-size: 12px;
+}
+
+.flexa-pi-version .flexa-pi-new {
+	color: #b26200;
+	font-weight: 600;
+}
+
+.flexa-pi-badge {
+	display: inline-block;
+	margin-top: 4px;
+	padding: 1px 7px;
+	background: #fcf0e3;
+	border-radius: 9px;
+	color: #b26200;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.flexa-pi-desc {
+	flex: 1 0 auto;
+	margin: 12px 0;
+	color: #50575e;
+	font-size: 13px;
+}
+
+.flexa-pi-foot {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+	min-height: 30px;
+}
+
+.flexa-pi-msg {
+	font-size: 12px;
+}
+
+.flexa-pi-msg.is-error {
+	color: #d63638;
+}
+
+.flexa-pi-msg.is-ok {
+	color: #008a20;
+}
+
+.flexa-pi-badge.is-pro {
+	background: #eef3fc;
+	color: #2b56a8;
+}
+
+.flexa-pi-intro {
+	max-width: 760px;
+	color: #50575e;
+}
