@@ -121,6 +121,7 @@ function flexa_admin_render_overview() {
 		<?php if ( $totals && current_user_can( 'install_plugins' ) ) : ?>
 			<?php
 			$missing = $totals['total'] - $totals['installed'];
+			$updates = $totals['updates'];
 			$percent = $totals['total'] ? round( $totals['installed'] / $totals['total'] * 100 ) : 0;
 			?>
 			<aside class="flexa-hero-side">
@@ -158,21 +159,21 @@ function flexa_admin_render_overview() {
 					<i style="width:<?php echo absint( $percent ); ?>%"></i>
 				</div>
 
-				<?php if ( ! $totals['updates'] && ! $missing ) : ?>
+				<?php if ( ! $updates && ! $missing ) : ?>
 					<p class="flexa-side-ok">
 						<?php flexa_icon( 'check' ); ?><?php esc_html_e( 'All up to date', 'flexa' ); ?>
 					</p>
 				<?php else : ?>
 					<ul class="flexa-side-list">
-						<?php if ( $totals['updates'] ) : ?>
+						<?php if ( $updates ) : ?>
 							<li>
 								<span class="flexa-dot flexa-dot-amber"></span>
 								<span>
 									<?php
 									printf(
 										/* translators: %s: number of plugins with updates. */
-										esc_html( _n( '%s update available', '%s updates available', $totals['updates'], 'flexa' ) ),
-										'<b>' . absint( $totals['updates'] ) . '</b>'
+										esc_html( _n( '%s update available', '%s updates available', $updates, 'flexa' ) ),
+										'<b>' . absint( $updates ) . '</b>'
 									);
 									?>
 								</span>

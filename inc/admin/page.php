@@ -6,16 +6,9 @@
  * nav-tab markup, the same one about.php uses, as guideline 12 asks for core
  * UI elements.
  *
- * NOTE ON GUIDELINE 12: it says a theme "may optionally add custom sub-pages
- * under Appearance", which reads as sub-pages only. This page is registered as
- * a top-level menu instead, by request. To move it back under Appearance,
- * swap the add_menu_page() call in flexa_admin_menu() for
- *
- *     add_submenu_page( 'themes.php', $title, $title, 'edit_theme_options',
- *         FLEXA_ADMIN_PAGE, 'flexa_admin_render_page' );
- *
- * and change admin.php back to themes.php in flexa_admin_url(). Nothing else
- * depends on where the page lives.
+ * Guideline 12 allows a theme to add custom sub-pages under Appearance only, so
+ * the page is registered with add_submenu_page( 'themes.php', ... ) and lives at
+ * themes.php?page=flexa-theme.
  *
  * @package Flexa
  * @since   1.3.0
@@ -89,26 +82,24 @@ function flexa_admin_url( $tab = '', $args = array() ) {
 		$query['tab'] = $tab;
 	}
 
-	// Top-level menu, so admin.php - a sub-page of Appearance would be themes.php.
-	return add_query_arg( array_merge( $query, $args ), admin_url( 'admin.php' ) );
+	// Sub-page of Appearance, so themes.php.
+	return add_query_arg( array_merge( $query, $args ), admin_url( 'themes.php' ) );
 }
 
 /**
- * Register the page as its own top-level menu.
+ * Register the page as a sub-page under Appearance.
  *
- * Position 59.8 puts it immediately above Appearance (60). A fractional
- * position is deliberate: whole numbers are taken by core and colliding with
- * one would silently displace whichever menu got there second.
+ * Guideline 12 permits themes to add sub-pages under Appearance only, so this
+ * hangs off themes.php rather than registering a top-level menu.
  */
 function flexa_admin_menu() {
-	$hook = add_menu_page(
+	$hook = add_submenu_page(
+		'themes.php',
 		esc_html__( 'Flexa Theme', 'flexa' ),
 		esc_html__( 'Flexa Theme', 'flexa' ),
 		'edit_theme_options',
 		FLEXA_ADMIN_PAGE,
-		'flexa_admin_render_page',
-		'dashicons-layout',
-		59.8
+		'flexa_admin_render_page'
 	);
 
 	if ( ! $hook ) {
