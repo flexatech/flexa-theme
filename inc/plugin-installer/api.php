@@ -82,7 +82,7 @@ function flexa_pi_fetch_plugins( $force = false ) {
 			'name'        => isset( $plugin['name'] ) ? flexa_pi_decode( $plugin['name'] ) : $slug,
 			'description' => isset( $plugin['short_description'] ) ? flexa_pi_decode( $plugin['short_description'] ) : '',
 			'version'     => isset( $plugin['version'] ) ? flexa_pi_decode( $plugin['version'] ) : '',
-			'icon'        => flexa_pi_pick_icon( isset( $plugin['icons'] ) ? (array) $plugin['icons'] : array() ),
+			'icon'        => isset( $plugin['icons'] ) ? flexa_pi_pick_icon( $plugin['icons'] ) : '',
 			'url'         => 'https://wordpress.org/plugins/' . $slug . '/',
 		);
 	}
@@ -93,6 +93,39 @@ function flexa_pi_fetch_plugins( $force = false ) {
 }
 
 /**
+ * Best icon URL out of the set WordPress.org returns.
+ *
+ * Sharpest first: SVG scales, then the retina bitmap, then the plain one.
+ * "default" is the generic placeholder wp.org hands back when a plugin ships
+ * no icon at all, so it is only used as a last resort.
+ *
+ * Only WordPress.org's own asset hosts are accepted. The URL arrives inside an
+ * API response, so it is treated as untrusted input rather than passed straight
+ * into an img tag.
+ *
+ * @param array|object $icons Icons member of the API response.
+ * @return string Empty when there is nothing usable, and the card falls back
+ *                to its monogram.
+ */
+function flexa_pi_pick_icon( $icons ) {
+	$icons = (array) $icons;
+
+	foreach ( array( 'svg', '2x', '1x' ) as $size ) {
+		if ( empty( $icons[ $size ] ) ) {
+			continue;
+		}
+
+		$url = esc_url_raw( (string) $icons[ $size ] );
+
+		if ( $url && preg_match( '#^https://(ps|s)\.w\.org/#', $url ) ) {
+			return $url;
+		}
+	}
+
+	return '';
+}
+
+/**
  * Decode HTML entities returned by the API (for example "&amp;" or "&#8211;").
  *
  * @param string $text Raw string from the API.
@@ -100,22 +133,6 @@ function flexa_pi_fetch_plugins( $force = false ) {
  */
 function flexa_pi_decode( $text ) {
 	return wp_strip_all_tags( html_entity_decode( (string) $text, ENT_QUOTES, 'UTF-8' ) );
-}
-
-/**
- * Pick the best icon, following WordPress core's order of preference.
- *
- * @param array $icons Icon set from the API.
- * @return string Icon URL, or an empty string.
- */
-function flexa_pi_pick_icon( $icons ) {
-	foreach ( array( 'svg', '2x', '1x', 'default' ) as $size ) {
-		if ( ! empty( $icons[ $size ] ) ) {
-			return esc_url_raw( $icons[ $size ] );
-		}
-	}
-
-	return '';
 }
 
 /**

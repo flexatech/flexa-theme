@@ -30,13 +30,15 @@ const FLEXA_PI_AUTHOR = 'flexatech';
  * expires on its own. It carries autoload=false (set_transient() does that for
  * any transient with an expiry), so a stale row costs nothing while it waits.
  */
-const FLEXA_PI_TRANSIENT = 'flexa_pi_plugins_v1';
+const FLEXA_PI_TRANSIENT = 'flexa_pi_plugins_v3';
 
 /** Cache lifetime: 12 hours. */
 const FLEXA_PI_TTL = 12 * HOUR_IN_SECONDS;
 
-/** Page slug under the Appearance menu. */
-const FLEXA_PI_PAGE = 'flexa-plugins';
+/*
+ * No page slug here: this feature is the Plugins tab of the Flexa Theme page,
+ * so the slug belongs to inc/admin/page.php.
+ */
 
 /**
  * Feature modules, in dependency order.
@@ -48,7 +50,7 @@ const FLEXA_PI_PAGE = 'flexa-plugins';
  * screen   - registers the menu and renders the page
  * ajax     - the install / activate / update endpoints
  */
-$flexa_pi_modules = array( 'api', 'status', 'assets', 'card', 'screen', 'ajax' );
+$flexa_pi_modules = array( 'api', 'status', 'card', 'screen', 'ajax' );
 
 foreach ( $flexa_pi_modules as $flexa_pi_module ) {
 	require_once __DIR__ . '/' . $flexa_pi_module . '.php';

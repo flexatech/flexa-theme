@@ -1,6 +1,6 @@
 <?php
 /**
- * Flexa plugins screen - one plugin card.
+ * Flexa plugins tab - one plugin card.
  *
  * @package Flexa
  * @since   1.0.0
@@ -8,6 +8,67 @@
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
+}
+
+/**
+ * A stable colour for a plugin, derived from its slug.
+ *
+ * Icons are not downloaded from WordPress.org: guideline 9 forbids loading
+ * images from another domain, so each plugin gets a monogram instead. Deriving
+ * the colour from the slug keeps it the same on every visit.
+ *
+ * @param string $slug Plugin slug.
+ * @return string Hex colour.
+ */
+function flexa_pi_colour( $slug ) {
+	$palette = array( '#0F92F7', '#3858e9', '#00786c', '#8c5e00', '#993955', '#4f5d75', '#1a6b3c', '#6d4aa7' );
+	$hash    = 0;
+
+	for ( $i = 0, $len = strlen( $slug ); $i < $len; $i++ ) {
+		$hash = ( $hash * 31 + ord( $slug[ $i ] ) ) % 4294967296;
+	}
+
+	return $palette[ $hash % count( $palette ) ];
+}
+
+/**
+ * The one or two letters shown in the monogram.
+ *
+ * @param string $name Plugin name.
+ * @return string
+ */
+function flexa_pi_initials( $name ) {
+	$words = preg_split( '/\s+/', trim( preg_replace( '/[^A-Za-z ]/', ' ', $name ) ), -1, PREG_SPLIT_NO_EMPTY );
+
+	if ( empty( $words ) ) {
+		return '?';
+	}
+
+	$out = substr( $words[0], 0, 1 );
+
+	if ( isset( $words[1] ) ) {
+		$out .= substr( $words[1], 0, 1 );
+	}
+
+	return strtoupper( $out );
+}
+
+/**
+ * Status chip for a state: CSS class, label and icon.
+ *
+ * @param string $status install | inactive | active | update | pro | locked
+ * @return array{0:string,1:string,2:string}|null Null when no chip is shown.
+ */
+function flexa_pi_chip( $status ) {
+	$chips = array(
+		'active'   => array( 'flexa-chip-active', __( 'Active', 'flexa' ), 'check' ),
+		'inactive' => array( 'flexa-chip-inactive', __( 'Inactive', 'flexa' ), 'power' ),
+		'update'   => array( 'flexa-chip-update', __( 'Update available', 'flexa' ), 'alert' ),
+		'pro'      => array( 'flexa-chip-pro', __( 'Pro version installed', 'flexa' ), 'bolt' ),
+		'locked'   => array( 'flexa-chip-inactive', __( 'Installed', 'flexa' ), 'lock' ),
+	);
+
+	return isset( $chips[ $status ] ) ? $chips[ $status ] : null;
 }
 
 /**
@@ -19,69 +80,81 @@ function flexa_pi_render_card( $plugin ) {
 	$state  = flexa_pi_get_state( $plugin );
 	$status = $state['status'];
 
-	// Without the capability there is nothing to offer, so fall back to the
-	// plain installed/active view.
+	/*
+	 * Without the capability there is nothing to offer, so show the state
+	 * rather than a button that would come back with a 403.
+	 */
 	if ( 'update' === $status && ! current_user_can( 'update_plugins' ) ) {
-		$status = $state['active'] ? 'active' : 'inactive';
+		$status = $state['active'] ? 'active' : 'locked';
+	}
+
+	if ( 'inactive' === $status && ! current_user_can( 'activate_plugins' ) ) {
+		$status = 'locked';
 	}
 
 	// Show the version actually installed, not the one on WordPress.org, so an
 	// outdated plugin cannot look current.
-	$shown_version = $state['installed'] ? $state['installed'] : $plugin['version'];
-	?>
-	<div class="flexa-pi-card">
-		<div class="flexa-pi-head">
-			<?php if ( $plugin['icon'] ) : ?>
-				<img
-					class="flexa-pi-icon"
-					src="<?php echo esc_url( $plugin['icon'] ); ?>"
-					alt=""
-					width="56"
-					height="56"
-				/>
-			<?php else : ?>
-				<span class="flexa-pi-icon-empty" aria-hidden="true"></span>
-			<?php endif; ?>
+	$shown = $state['installed'] ? $state['installed'] : $plugin['version'];
+	$chip  = flexa_pi_chip( $status );
 
-			<div>
-				<h2 class="flexa-pi-title">
+	// Searching happens in the browser; this is what it matches against.
+	$haystack = strtolower( $plugin['name'] . ' ' . $plugin['description'] );
+	?>
+	<div class="flexa-card" data-status="<?php echo esc_attr( $status ); ?>" data-search="<?php echo esc_attr( $haystack ); ?>">
+		<div class="flexa-chead">
+			<span class="flexa-mono" style="background:<?php echo esc_attr( flexa_pi_colour( $plugin['slug'] ) ); ?>" aria-hidden="true">
+				<?php echo esc_html( flexa_pi_initials( $plugin['name'] ) ); ?>
+				<?php if ( ! empty( $plugin['icon'] ) ) : ?>
+					<?php
+					/*
+					 * The icon sits on top of the monogram rather than replacing it,
+					 * so a plugin whose icon 404s or is blocked still shows its
+					 * letters instead of an empty square. onerror drops the image
+					 * the moment it fails, which is before any script could run.
+					 */
+					?>
+					<img src="<?php echo esc_url( $plugin['icon'] ); ?>" alt="" loading="lazy" decoding="async" onerror="this.remove()">
+				<?php endif; ?>
+			</span>
+
+			<div class="flexa-chead-text">
+				<h3 class="flexa-ctitle">
 					<a href="<?php echo esc_url( $plugin['url'] ); ?>" target="_blank" rel="noopener noreferrer">
 						<?php echo esc_html( $plugin['name'] ); ?>
 					</a>
-				</h2>
+				</h3>
 
-				<?php if ( $shown_version ) : ?>
-					<span class="flexa-pi-version">
+				<span class="flexa-cver">
+					<?php
+					printf(
+						/* translators: %s: plugin version number. */
+						esc_html__( 'Version %s', 'flexa' ),
+						esc_html( $shown )
+					);
+					?>
+					<?php if ( 'update' === $status ) : ?>
+						&rarr; <span class="flexa-new"><?php echo esc_html( $plugin['version'] ); ?></span>
+					<?php endif; ?>
+				</span>
+
+				<?php if ( $chip ) : ?>
+					<span class="flexa-chip <?php echo esc_attr( $chip[0] ); ?>">
 						<?php
-						printf(
-							/* translators: %s: plugin version number. */
-							esc_html__( 'Version %s', 'flexa' ),
-							esc_html( $shown_version )
-						);
+						if ( $chip[2] ) {
+							flexa_icon( $chip[2] );
+						}
+						echo esc_html( $chip[1] );
 						?>
-
-						<?php if ( 'update' === $status ) : ?>
-							&rarr;
-							<span class="flexa-pi-new"><?php echo esc_html( $plugin['version'] ); ?></span>
-						<?php endif; ?>
 					</span>
-				<?php endif; ?>
-
-				<?php if ( 'update' === $status ) : ?>
-					<span class="flexa-pi-badge"><?php esc_html_e( 'Update available', 'flexa' ); ?></span>
-				<?php elseif ( 'pro' === $status ) : ?>
-					<span class="flexa-pi-badge is-pro"><?php esc_html_e( 'Pro version installed', 'flexa' ); ?></span>
-				<?php elseif ( $state['needed_by_pro'] ) : ?>
-					<span class="flexa-pi-badge is-pro"><?php esc_html_e( 'Required by the Pro version', 'flexa' ); ?></span>
 				<?php endif; ?>
 			</div>
 		</div>
 
-		<p class="flexa-pi-desc"><?php echo esc_html( $plugin['description'] ); ?></p>
+		<p class="flexa-cdesc"><?php echo esc_html( $plugin['description'] ); ?></p>
 
-		<div class="flexa-pi-foot">
+		<div class="flexa-cfoot">
 			<?php flexa_pi_render_action( $plugin['slug'], $status ); ?>
-			<span class="flexa-pi-msg"></span>
+			<span class="flexa-msg" role="status"></span>
 		</div>
 	</div>
 	<?php
@@ -91,43 +164,40 @@ function flexa_pi_render_card( $plugin ) {
  * Render the action button for a card.
  *
  * @param string $slug   Plugin slug.
- * @param string $status install | inactive | active | update
+ * @param string $status install | inactive | active | update | pro | locked
  */
 function flexa_pi_render_action( $slug, $status ) {
-	// Nothing to offer for these two: an active plugin is already done, and the
-	// free build must never be installed over a Pro one.
-	if ( 'active' === $status || 'pro' === $status ) {
+	$done = array(
+		'active' => array( __( 'Activated', 'flexa' ), 'check' ),
+		'pro'    => array( __( 'Pro installed', 'flexa' ), 'bolt' ),
+		'locked' => array( __( 'Installed', 'flexa' ), 'lock' ),
+	);
+
+	// Nothing left for this user to do here.
+	if ( isset( $done[ $status ] ) ) {
 		?>
 		<button type="button" class="button" disabled>
-			<?php
-			if ( 'pro' === $status ) {
-				esc_html_e( 'Pro installed', 'flexa' );
-			} else {
-				esc_html_e( 'Activated', 'flexa' );
-			}
-			?>
+			<?php flexa_icon( $done[ $status ][1] ); ?><?php echo esc_html( $done[ $status ][0] ); ?>
 		</button>
 		<?php
 		return;
 	}
 
-	$labels = array(
-		'update'   => __( 'Update', 'flexa' ),
-		'inactive' => __( 'Activate', 'flexa' ),
-		'install'  => __( 'Install', 'flexa' ),
+	$actions = array(
+		'update'   => array( __( 'Update', 'flexa' ), 'update', 'update' ),
+		'inactive' => array( __( 'Activate', 'flexa' ), 'power', 'activate' ),
+		'install'  => array( __( 'Install', 'flexa' ), 'download', 'install' ),
 	);
 
-	// 'inactive' means installed but off, so the action to offer is "activate".
-	$action = 'inactive' === $status ? 'activate' : $status;
-	$label  = isset( $labels[ $status ] ) ? $labels[ $status ] : $labels['install'];
+	$action = isset( $actions[ $status ] ) ? $actions[ $status ] : $actions['install'];
 	?>
 	<button
 		type="button"
-		class="button button-primary flexa-pi-action"
-		data-action="<?php echo esc_attr( $action ); ?>"
+		class="button button-primary flexa-act"
+		data-action="<?php echo esc_attr( $action[2] ); ?>"
 		data-slug="<?php echo esc_attr( $slug ); ?>"
 	>
-		<?php echo esc_html( $label ); ?>
+		<?php flexa_icon( $action[1] ); ?><?php echo esc_html( $action[0] ); ?>
 	</button>
 	<?php
 }
